@@ -20,14 +20,8 @@ import { RouterModule } from '@angular/router';
       </header>
 
       <section class="features-grid">
-        <div class="feature-card" routerLink="/predict">
-          <h3>🔮 Predicciones</h3>
-          <p>Predice enlaces moleculares usando modelos de deep learning</p>
-          <button class="btn-primary">Comenzar Predicción</button>
-        </div>
-
         <div class="feature-card" routerLink="/fragment">
-          <h3>🧪 Fragmentos</h3>
+          <h3>🖥️ Fragmentos</h3>
           <p>Analiza fragmentos moleculares y sus propiedades</p>
           <button class="btn-primary">Analizar Fragmentos</button>
         </div>

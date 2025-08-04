@@ -4,25 +4,6 @@ info:
   version: 1.0.0
   description: |-
     ## Flujo de uso de la API (Español)
-    - `POST /api/v1/predict/` — Obtén información enriquecida de la molécula: SMILES canónico, imagen SVG, posiciones de átomos y enlaces, ID único.
-    - `POST /api/v1/predict/single/` — Predice la BDE para un enlace específico de una molécula.
-    - `POST /api/v1/predict/multiple/` — Predice las BDEs para varios enlaces de una molécula.
-    - `POST /api/v1/fragment/` — Genera fragmentos moleculares en formato SMILES y/o XYZ, con valores de BDE para cada fragmento.
-    - `POST /api/v1/predict/check/` — Valida productos de escisión y compara con los fragmentos predichos, incluyendo el cálculo de BDE.
-    - `POST /api/v1/infer/all/` — Predice las BDEs para todos los enlaces simples de una molécula.
-    - `POST /api/v1/download_report/` — Descarga un informe TXT  con los resultados de predicción y fragmentación.
-    - `POST /api/v1/predict/info-smile-canonical/` — Obtén el SMILES canónico y el ID único de una molécula.
-
-    ## API usage flow (English)
-    - `POST /api/v1/predict/` — Get enriched molecule info: canonical SMILES, SVG image, atom and bond positions, and unique ID.
-    - `POST /api/v1/predict/single/` — Predict the BDE for a specific bond in a molecule.
-    - `POST /api/v1/predict/multiple/` — Predict BDEs for multiple bonds in a molecule.
-    - `POST /api/v1/fragment/` — Generate molecular fragments in SMILES and/or XYZ format, with BDE values for each fragment.
-    - `POST /api/v1/predict/check/` — Validate cleavage products and compare with predicted fragments, including BDE calculation.
-    - `POST /api/v1/infer/all/` — Predict BDEs for all single bonds in a molecule.
-    - `POST /api/v1/download_report/` — Download a TXT report with prediction and fragmentation results.
-    - `POST /api/v1/predict/info-smile-canonical/` — Get the canonical SMILES and unique ID for a molecule.
-
 paths:
   /api/schema/:
     get:
@@ -45,9 +26,105 @@ paths:
           schema:
             type: string
             enum:
+              - af
+              - ar
+              - ar-dz
+              - ast
+              - az
+              - be
+              - bg
+              - bn
+              - br
+              - bs
+              - ca
+              - ckb
+              - cs
+              - cy
+              - da
+              - de
+              - dsb
+              - el
               - en
+              - en-au
+              - en-gb
+              - eo
               - es
+              - es-ar
+              - es-co
               - es-mx
+              - es-ni
+              - es-ve
+              - et
+              - eu
+              - fa
+              - fi
+              - fr
+              - fy
+              - ga
+              - gd
+              - gl
+              - he
+              - hi
+              - hr
+              - hsb
+              - hu
+              - hy
+              - ia
+              - id
+              - ig
+              - io
+              - is
+              - it
+              - ja
+              - ka
+              - kab
+              - kk
+              - km
+              - kn
+              - ko
+              - ky
+              - lb
+              - lt
+              - lv
+              - mk
+              - ml
+              - mn
+              - mr
+              - ms
+              - my
+              - nb
+              - ne
+              - nl
+              - nn
+              - os
+              - pa
+              - pl
+              - pt
+              - pt-br
+              - ro
+              - ru
+              - sk
+              - sl
+              - sq
+              - sr
+              - sr-latn
+              - sv
+              - sw
+              - ta
+              - te
+              - tg
+              - th
+              - tk
+              - tr
+              - tt
+              - udm
+              - ug
+              - uk
+              - ur
+              - uz
+              - vi
+              - zh-hans
+              - zh-hant
       tags:
         - schema
       security:
@@ -186,6 +263,11 @@ paths:
                   value:
                     status: success
                     data:
+                      bde_values:
+                        - idx: 1
+                          bde: 95.0
+                        - idx: 2
+                          bde: 100.0
                       smiles_canonical: CCO
                       molecule_id: a1b2c3d4e5f6a7b8
                       bonds:
@@ -878,6 +960,25 @@ components:
         - symbol
       title: Atom2D
       type: object
+    BDEValues:
+      description: |-
+        Representa los valores de BDE para un enlace.
+        - idx: Índice del enlace
+        - bde: Valor de BDE
+      properties:
+        idx:
+          title: Idx
+          type: integer
+        bde:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: Bde
+      required:
+        - idx
+        - bde
+      title: BDEValues
+      type: object
     Bond2D:
       description: |-
         Información 2D de un enlace para visualización y metadatos.
@@ -1059,12 +1160,19 @@ components:
     FragmentResponseData:
       description: |-
         Salida de /fragment/.
+        - bde_values: Lista de objetos bde_values
         - smiles_canonical: SMILES canónico
         - molecule_id: ID de la molécula
         - bonds: Lista de enlaces evaluados
         - smiles_list: Lista de SMILES (opcional)
         - xyz_block: Cadena XYZ (opcional)
       properties:
+        bde_values:
+          description: Lista de objetos BDEValues
+          items:
+            $ref: "#/components/schemas/BDEValues"
+          title: Bde Values
+          type: array
         smiles_canonical:
           title: Smiles Canonical
           type: string
@@ -1091,6 +1199,7 @@ components:
           default: null
           title: Xyz Block
       required:
+        - bde_values
         - smiles_canonical
         - molecule_id
         - bonds

@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.base.service.ts
 api.module.ts
@@ -19,6 +18,7 @@ model/aPIResponsePredictCheckResponseData.ts
 model/aPIResponsePredictMultipleResponseData.ts
 model/aPIResponsePredictSingleResponseData.ts
 model/atom2D.ts
+model/bDEValues.ts
 model/bond2D.ts
 model/bondTypeEnum.ts
 model/downloadReportRequest.ts

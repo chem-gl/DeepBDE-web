@@ -7,6 +7,7 @@ export * from './aPIResponsePredictCheckResponseData';
 export * from './aPIResponsePredictMultipleResponseData';
 export * from './aPIResponsePredictSingleResponseData';
 export * from './atom2D';
+export * from './bDEValues';
 export * from './bond2D';
 export * from './bondTypeEnum';
 export * from './downloadReportRequest';
