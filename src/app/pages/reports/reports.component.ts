@@ -14,7 +14,7 @@ import {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="reports-container">
-      <h1>Reports and Downloads</h1>
+      <h1>Reports</h1>
       <div class="reports-form">
         <div class="form-group">
           <label for="smiles">Molecule SMILES:</label>
