@@ -16,16 +16,16 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="fragment-container">
-      <h1>Análisis de Fragmentos Moleculares</h1>
-      <!-- Paso 1: Obtener la estructura molecular -->
+      <h1>Molecular Fragment Analysis</h1>
+      <!-- Step 1: Get molecular structure -->
       <div class="fragment-form">
         <div class="form-group">
-          <label for="smiles">SMILES de la Molécula:</label>
+          <label for="smiles">Molecule SMILES:</label>
           <input
             type="text"
             id="smiles"
             [(ngModel)]="smilesInput"
-            placeholder="Ej: CCOc1cccc(O)c1"
+            placeholder="e.g.: CCOc1cccc(O)c1"
             class="form-control"
           />
         </div>
@@ -35,61 +35,60 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
             [disabled]="loadingStructure || !smilesInput"
             class="btn-secondary"
           >
-            {{ loadingStructure ? 'Cargando...' : 'Cargar Estructura' }}
+            {{ loadingStructure ? 'Loading...' : 'Load Structure' }}
           </button>
         </div>
       </div>
       <div *ngIf="loadingStructure" class="loading">
         <div class="spinner"></div>
-        <p>Cargando estructura molecular...</p>
+        <p>Loading molecular structure...</p>
       </div>
-      <!-- Mostrar la estructura molecular -->
+      <!-- Show molecular structure -->
       <div *ngIf="svgImage" class="structure-section">
-        <h2>Estructura Molecular</h2>
+        <h2>Molecular Structure</h2>
         <div class="result-card">
           <div class="image-container">
             <div [innerHTML]="sanitizedSvg" class="svg-display"></div>
           </div>
         </div>
       </div>
-      <!-- Paso 2: Configurar análisis de fragmentos (solo aparece después de cargar la estructura) -->
+      <!-- Step 2: Configure fragment analysis (only appears after loading structure) -->
       <div *ngIf="svgImage && !loadingStructure" class="fragment-analysis-form">
-        <h2>Configurar Análisis de Fragmentos</h2>
+        <h2>Configure Fragment Analysis</h2>
         <div class="analysis-form">
           <div class="info-display">
-            <p><strong>ID de la Molécula:</strong> {{ moleculeId }}</p>
+            <p><strong>Molecule ID:</strong> {{ moleculeId }}</p>
           </div>
           <div class="form-group">
-            <label for="bondIdx">Índice del Enlace (opcional):</label>
+            <label for="bondIdx">Bond Index (optional):</label>
             <input
               type="number"
               id="bondIdx"
               [(ngModel)]="bondIdx"
-              placeholder="Dejar vacío para todos los enlaces"
+              placeholder="Leave empty for all bonds"
               min="0"
               step="1"
               class="form-control"
             />
           </div>
-          <!-- Campo de productos esperados - solo aparece cuando hay índice de enlace -->
+          <!-- Expected products field - only appears when bond index exists -->
         </div>
         <div class="form-group">
-          <label>Formatos de Exportación (requerido):</label>
+          <label>Export Formats (required):</label>
           <div class="checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" [(ngModel)]="exportSmiles" />
-              Exportar SMILES
+              Export SMILES
             </label>
             <label class="checkbox-label">
               <input type="checkbox" [(ngModel)]="exportXyz" />
-              Exportar XYZ
+              Export XYZ
             </label>
           </div>
           <small
             style="color: #666; font-size: 0.85rem; margin-top: 0.5rem; display: block;"
           >
-            Debes seleccionar al menos un formato de exportación para poder
-            realizar el análisis.
+            You must select at least one export format to perform the analysis.
           </small>
         </div>
         <div class="form-actions">
@@ -100,48 +99,48 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
             "
             class="btn-primary"
           >
-            {{ loadingAnalysis ? 'Analizando...' : 'Analizar Fragmentos' }}
+            {{ loadingAnalysis ? 'Analyzing...' : 'Analyze Fragments' }}
           </button>
         </div>
       </div>
 
       <div *ngIf="loadingAnalysis" class="loading">
         <div class="spinner"></div>
-        <p>Analizando fragmentos moleculares...</p>
+        <p>Analyzing molecular fragments...</p>
       </div>
 
       <div *ngIf="fragmentResults" class="results">
-        <h2>Resultados del Análisis</h2>
+        <h2>Analysis Results</h2>
         <div class="result-card">
-          <!-- Información básica -->
+          <!-- Basic information -->
           <div class="fragment-info">
-            <h3>Información de la Molécula</h3>
+            <h3>Molecule Information</h3>
             <div class="info-grid">
               <div class="info-item">
-                <label>SMILES Canónico:</label>
+                <label>Canonical SMILES:</label>
                 <span class="smiles-text">{{
                   fragmentResults.smiles_canonical
                 }}</span>
               </div>
               <div class="info-item">
-                <label>ID de la Molécula:</label>
+                <label>Molecule ID:</label>
                 <span>{{ fragmentResults.molecule_id }}</span>
               </div>
             </div>
           </div>
 
-          <!-- Enlaces evaluados -->
+          <!-- Evaluated bonds -->
           <div
             class="bonds-section"
             *ngIf="fragmentResults.bonds && fragmentResults.bonds.length > 0"
           >
-            <h3>Enlaces Evaluados ({{ fragmentResults.bonds.length }})</h3>
+            <h3>Evaluated Bonds ({{ fragmentResults.bonds.length }})</h3>
             <div class="bonds-table">
               <div class="table-header">
-                <div class="col">Índice</div>
-                <div class="col">Enlace</div>
-                <div class="col">Átomos</div>
-                <div class="col">Tipo</div>
+                <div class="col">Index</div>
+                <div class="col">Bond</div>
+                <div class="col">Atoms</div>
+                <div class="col">Type</div>
                 <div class="col">Fragmentable</div>
                 <div class="col">BDE</div>
               </div>
@@ -163,7 +162,7 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
                     [class.yes]="bond.is_fragmentable"
                     [class.no]="!bond.is_fragmentable"
                   >
-                    {{ bond.is_fragmentable ? 'Sí' : 'No' }}
+                    {{ bond.is_fragmentable ? 'Yes' : 'No' }}
                   </span>
                 </div>
                 <div class="col">{{ getBDEValue(bond.idx) }}</div>
@@ -171,9 +170,9 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
             </div>
           </div>
 
-          <!-- Botones de descarga -->
+          <!-- Download buttons -->
           <div class="download-section">
-            <h3>Descargas</h3>
+            <h3>Downloads</h3>
             <div class="download-actions">
               <button
                 *ngIf="
@@ -183,7 +182,7 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
                 (click)="downloadSmilesList()"
                 class="btn-download"
               >
-                📄 Descargar Lista SMILES ({{
+                📄 Download SMILES List ({{
                   fragmentResults.smiles_list.length
                 }}
                 items)
@@ -193,14 +192,14 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
                 (click)="downloadXyzFile()"
                 class="btn-download"
               >
-                🧪 Descargar Archivo XYZ
+                🧪 Download XYZ File
               </button>
             </div>
           </div>
 
-          <!-- Debug: Mostrar JSON completo -->
+          <!-- Debug: Show complete JSON -->
           <details class="debug-section">
-            <summary>Ver datos completos (JSON)</summary>
+            <summary>View complete data (JSON)</summary>
             <pre>{{ fragmentResults | json }}</pre>
           </details>
         </div>
@@ -217,180 +216,325 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
       .fragment-container {
         padding: 2rem;
         margin: 0 auto;
+        max-width: 1400px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
       }
+
       h1 {
-        color: #2c3e50;
-        margin-bottom: 2rem;
+        color: #2d3748;
+        margin-bottom: 3rem;
         text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
       }
+
+      h1::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+      }
+
       .fragment-form {
-        background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1),
+          0 2px 8px rgba(0, 0, 0, 0.06);
         margin-bottom: 2rem;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        position: relative;
+        overflow: hidden;
       }
+
+      .fragment-form::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+      }
+
       .fragment-analysis-form {
-        background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1),
+          0 5px 15px rgba(0, 0, 0, 0.08);
         margin-bottom: 2rem;
-        border-left: 4px solid #e67e22;
+        border-left: 6px solid #4299e1;
+        position: relative;
       }
+
       .fragment-analysis-form h2 {
         margin-top: 0;
-        color: #e67e22;
-        margin-bottom: 1.5rem;
+        color: #2b6cb0;
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+        font-weight: 600;
       }
+
       .analysis-form {
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid rgba(66, 153, 225, 0.2);
       }
+
       .info-display {
-        background: #e8f5e8;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-bottom: 1.5rem;
-        border-left: 4px solid #27ae60;
+        background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        border-left: 6px solid #48bb78;
+        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.15);
       }
+
       .info-display p {
         margin: 0;
-        color: #2c3e50;
-        font-size: 0.95rem;
+        color: #2d3748;
+        font-size: 1rem;
+        font-weight: 500;
       }
 
       @keyframes slideIn {
         from {
           opacity: 0;
-          transform: translateY(-10px);
+          transform: translateY(-20px);
         }
         to {
           opacity: 1;
           transform: translateY(0);
         }
       }
-      .structure-section {
-        background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 2rem;
-        border-left: 4px solid #27ae60;
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
       }
+
+      .structure-section {
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1),
+          0 5px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+        border-left: 6px solid #48bb78;
+        animation: slideIn 0.6s ease-out;
+      }
+
       .structure-section h2 {
         margin-top: 0;
-        color: #27ae60;
-        margin-bottom: 1.5rem;
+        color: #2f855a;
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+        font-weight: 600;
       }
+
       .image-container {
         text-align: center;
-        padding: 1.5rem;
-        background: white;
-        border-radius: 8px;
-        border: 2px solid #e1e8ed;
+        padding: 2rem;
+        background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+        border-radius: 15px;
+        border: 2px solid rgba(72, 187, 120, 0.2);
         margin: 1rem 0;
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
       }
+
       .svg-display {
         display: inline-block;
         max-width: 100%;
         overflow: visible;
         line-height: 0;
+        transition: transform 0.3s ease;
       }
+
+      .svg-display:hover {
+        transform: scale(1.02);
+      }
+
       .svg-display svg {
         max-width: 100%;
         height: auto;
-        border-radius: 4px;
+        border-radius: 8px;
         background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transition: box-shadow 0.3s ease;
       }
+
+      .svg-display svg:hover {
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+      }
+
       .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
       }
+
       label {
         display: block;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
         font-weight: 600;
-        color: #2c3e50;
+        color: #2d3748;
+        font-size: 1.1rem;
       }
+
       .form-control {
         width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #e1e8ed;
-        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
         font-size: 1rem;
-        transition: border-color 0.2s ease;
-        resize: vertical;
-        font-family: 'Courier New', monospace;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       }
+
       .form-control:focus {
         outline: none;
-        border-color: #3498db;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1),
+          0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
       }
-      /* Estilos específicos para textarea */
+
+      .form-control::placeholder {
+        color: #a0aec0;
+        font-style: italic;
+      }
+
       textarea.form-control {
-        min-height: 80px;
-        font-family: 'Courier New', monospace;
-        line-height: 1.4;
+        min-height: 100px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        line-height: 1.5;
+        resize: vertical;
       }
-      /* Placeholder styling para textarea */
-      textarea.form-control::placeholder {
-        font-family: 'Courier New', monospace;
-        color: #999;
-        font-size: 0.9rem;
-      }
+
       .form-actions {
         display: flex;
         justify-content: center;
+        margin-top: 2rem;
       }
+
       .btn-primary {
-        background: #e67e22;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 6px;
-        font-size: 1rem;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
       }
+
+      .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .btn-primary:hover::before {
+        left: 100%;
+      }
+
       .btn-primary:hover:not(:disabled) {
-        background: #d35400;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
       }
+
       .btn-primary:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
       }
+
       .btn-secondary {
-        background: #8e44ad;
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
         color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 6px;
+        padding: 1rem 2rem;
+        border-radius: 50px;
         font-size: 1rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.2s ease;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(74, 85, 104, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
+
       .btn-secondary:hover:not(:disabled) {
-        background: #7d3c98;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(74, 85, 104, 0.6);
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
       }
+
       .btn-secondary:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        transform: none;
       }
+
       .loading {
         text-align: center;
-        padding: 2rem;
+        padding: 3rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin: 2rem 0;
       }
+
       .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #e67e22;
+        border: 4px solid #e2e8f0;
+        border-top: 4px solid #667eea;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
         animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
+        margin: 0 auto 1.5rem;
       }
+
+      .loading p {
+        color: #4a5568;
+        font-size: 1.1rem;
+        font-weight: 500;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
       @keyframes spin {
         0% {
           transform: rotate(0deg);
@@ -399,112 +543,153 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
           transform: rotate(360deg);
         }
       }
+
       .results {
-        background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1),
+          0 5px 15px rgba(0, 0, 0, 0.08);
+        animation: slideIn 0.6s ease-out;
       }
+
+      .results h2 {
+        color: #2d3748;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+      }
+
       .result-card {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 6px;
-        border-left: 4px solid #e67e22;
+        background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        border-left: 6px solid #667eea;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
       }
 
       .fragment-info {
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        border-radius: 15px;
+        border-left: 6px solid #48bb78;
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.15);
       }
 
       .fragment-info h3 {
-        color: #e67e22;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
+        color: #2f855a;
+        margin-bottom: 1.5rem;
+        font-size: 1.6rem;
+        font-weight: 600;
       }
 
       .info-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 1.5rem;
       }
 
       .info-item {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.5rem;
       }
 
       .info-item label {
-        font-weight: 600;
-        color: #2c3e50;
-        font-size: 0.9rem;
+        font-weight: 700;
+        color: #2d3748;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .info-item span {
-        padding: 0.5rem;
-        background: white;
-        border: 1px solid #e1e8ed;
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
-        font-size: 0.85rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+        border: 2px solid rgba(72, 187, 120, 0.2);
+        border-radius: 10px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+      }
+
+      .info-item span:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
       }
 
       .smiles-text {
         word-break: break-all;
+        line-height: 1.4;
       }
 
       .bonds-section {
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
       }
 
       .bonds-section h3 {
-        color: #27ae60;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
+        color: #2b6cb0;
+        margin-bottom: 1.5rem;
+        font-size: 1.6rem;
+        font-weight: 600;
+        text-align: center;
       }
 
       .bonds-table {
-        background: white;
-        border-radius: 6px;
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+        border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1),
+          0 5px 15px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(43, 108, 176, 0.2);
       }
 
       .table-header {
         display: grid;
         grid-template-columns: 70px 1fr 110px 90px 110px 100px;
-        background: #34495e;
+        background: linear-gradient(135deg, #4299e1 0%, #2b6cb0 100%);
         color: white;
-        font-weight: 600;
-        font-size: 0.9rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .table-row {
         display: grid;
         grid-template-columns: 70px 1fr 110px 90px 110px 100px;
-        border-bottom: 1px solid #e1e8ed;
-        transition: background-color 0.2s ease;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        transition: all 0.3s ease;
+        position: relative;
       }
 
       .table-row:hover {
-        background-color: #f8f9fa;
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
 
       .table-row.fragmentable {
-        background-color: #e8f5e8;
+        background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        border-left: 4px solid #48bb78;
       }
 
       .table-row.non-fragmentable {
-        background-color: #fdf2f2;
+        background: linear-gradient(135deg, #fef5e7 0%, #fed7aa 100%);
+        border-left: 4px solid #ed8936;
       }
 
       .table-header .col,
       .table-row .col {
-        padding: 0.75rem 0.5rem;
-        border-right: 1px solid #e1e8ed;
+        padding: 1rem 0.75rem;
+        border-right: 1px solid rgba(226, 232, 240, 0.3);
         display: flex;
         align-items: center;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        font-weight: 500;
       }
 
       .table-header .col:last-child,
@@ -513,145 +698,293 @@ import { BDEValues } from '../../../../angular-client/model/bDEValues';
       }
 
       .status-badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
         text-align: center;
-        min-width: 40px;
+        min-width: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       }
 
       .status-badge.yes {
-        background: #d4edda;
-        color: #155724;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
       }
 
       .status-badge.no {
-        background: #f8d7da;
-        color: #721c24;
+        background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        color: white;
       }
 
       .download-section {
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+        border-radius: 15px;
+        border-left: 6px solid #4299e1;
+        box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
       }
 
       .download-section h3 {
-        color: #3498db;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
+        color: #2b6cb0;
+        margin-bottom: 1.5rem;
+        font-size: 1.6rem;
+        font-weight: 600;
+        text-align: center;
       }
 
       .download-actions {
         display: flex;
-        gap: 1rem;
+        gap: 1.5rem;
         flex-wrap: wrap;
+        justify-content: center;
       }
 
       .btn-download {
-        background: #3498db;
+        background: linear-gradient(135deg, #4299e1 0%, #2b6cb0 100%);
         color: white;
         border: none;
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
-        font-size: 0.9rem;
+        padding: 1rem 1.5rem;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-download::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .btn-download:hover::before {
+        left: 100%;
       }
 
       .btn-download:hover {
-        background: #2980b9;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 10px 30px rgba(66, 153, 225, 0.6);
+        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
       }
 
       .debug-section {
-        margin-top: 2rem;
-        border: 1px solid #e1e8ed;
-        border-radius: 6px;
+        margin-top: 2.5rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
       }
 
       .debug-section summary {
-        padding: 1rem;
-        background: #f8f9fa;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         cursor: pointer;
-        font-weight: 600;
-        color: #6c757d;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+      }
+
+      .debug-section summary:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
       }
 
       .debug-section pre {
         margin: 0;
-        padding: 1rem;
-        font-size: 0.8rem;
-        background: #2c3e50;
-        color: #ecf0f1;
+        padding: 2rem;
+        font-size: 0.85rem;
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        color: #e2e8f0;
         overflow-x: auto;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        line-height: 1.5;
+      }
+
+      .error {
+        background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+        border: 3px solid #e53e3e;
+        border-radius: 15px;
+        padding: 2rem;
+        color: #742a2a;
+        box-shadow: 0 10px 30px rgba(229, 62, 62, 0.2);
+        animation: slideIn 0.4s ease-out;
+      }
+
+      .error h3 {
+        margin-top: 0;
+        color: #c53030;
+        font-size: 1.4rem;
+        font-weight: 700;
+      }
+
+      .checkbox-group {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        justify-content: center;
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        border-radius: 12px;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .checkbox-label::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(102, 126, 234, 0.1),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .checkbox-label:hover::before {
+        left: 100%;
+      }
+
+      .checkbox-label:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        border-color: rgba(102, 126, 234, 0.4);
+      }
+
+      .checkbox-label input[type='checkbox'] {
+        width: 20px;
+        height: 20px;
+        margin: 0;
+        accent-color: #667eea;
+        transform: scale(1.2);
+      }
+
+      .form-group small {
+        color: #4a5568;
+        font-style: italic;
+        font-weight: 500;
+        background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        padding: 0.75rem;
+        border-radius: 8px;
+        border-left: 4px solid #48bb78;
+        margin-top: 1rem;
+        display: block;
       }
 
       @media (max-width: 768px) {
+        .fragment-container {
+          padding: 1rem;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
         .table-header,
         .table-row {
           grid-template-columns: 50px 1fr 70px 60px 80px 70px;
-          font-size: 0.75rem;
+          font-size: 0.8rem;
         }
 
         .table-header .col,
         .table-row .col {
-          padding: 0.4rem 0.2rem;
+          padding: 0.6rem 0.4rem;
         }
 
         .download-actions {
           flex-direction: column;
+          align-items: center;
         }
 
         .btn-download {
           justify-content: center;
+          width: 100%;
+          max-width: 300px;
+        }
+
+        .checkbox-group {
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .checkbox-label {
+          width: 100%;
+          max-width: 300px;
+          justify-content: center;
         }
       }
-      .result-card pre {
-        margin: 0;
-        font-size: 0.9rem;
-        white-space: pre-wrap;
-      }
-      .error {
-        background: #fff;
-        border: 2px solid #e74c3c;
-        border-radius: 12px;
-        padding: 2rem;
-        color: #e74c3c;
-      }
-      .checkbox-group {
-        display: flex;
-        gap: 1rem;
-        margin-top: 0.5rem;
-      }
-      .checkbox-label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: normal;
-        cursor: pointer;
-      }
-      .checkbox-label input[type='checkbox'] {
-        width: auto;
-        margin: 0;
-      }
 
-      .form-group small {
-        color: #6c757d;
-        font-style: italic;
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.6rem;
+        }
+
+        .fragment-form,
+        .fragment-analysis-form,
+        .structure-section,
+        .results {
+          padding: 1.5rem;
+        }
+
+        .table-header,
+        .table-row {
+          font-size: 0.75rem;
+        }
+
+        .info-grid {
+          gap: 1rem;
+        }
       }
     `,
   ],
 })
 export class FragmentComponent {
-  // Paso 1: Propiedades para cargar estructura
+  // Step 1: Properties for loading structure
   smilesInput = '';
   loadingStructure = false;
   svgImage: string | null = null;
   sanitizedSvg: SafeHtml | null = null;
 
-  // Paso 2: Propiedades para análisis de fragmentos
+  // Step 2: Properties for fragment analysis
   moleculeId = '';
   bondIdx: number | null = null;
   exportSmiles = false;
@@ -659,7 +992,7 @@ export class FragmentComponent {
   loadingAnalysis = false;
   fragmentResults: FragmentResponseData | null = null;
   BDE_calated: Array<BDEValues> = [];
-  // Propiedades comunes
+  // Common properties
   error: string | null = null;
   constructor(
     private readonly v1Service: V1Service,
@@ -667,18 +1000,19 @@ export class FragmentComponent {
   ) {}
   loadMoleculeStructure() {
     if (!this.smilesInput.trim()) {
-      this.error = 'Por favor ingresa el SMILES de la molécula';
+      this.error = 'Please enter the molecule SMILES';
       return;
     }
     this.loadingStructure = true;
     this.error = null;
     this.svgImage = null;
     this.sanitizedSvg = null;
-    // Limpiar resultados anteriores
+    // Clear previous results
     this.fragmentResults = null;
-    // moleculeId se obtendrá del backend, no lo limpiamos aquí
+    // moleculeId will be obtained from backend, don't clear it here
     this.bondIdx = null;
     this.exportSmiles = false;
+    this.exportXyz = false;
     this.exportXyz = false;
     const requestInfo: MoleculeInfoRequest = {
       smiles: this.smilesInput.trim(),
@@ -695,32 +1029,32 @@ export class FragmentComponent {
         if (data.image_svg) {
           this.svgImage = this.processSVGData(data.image_svg);
           if (!this.svgImage) {
-            this.error = 'No se pudo procesar la imagen SVG';
+            this.error = 'Could not process SVG image';
           }
         } else {
-          this.error = 'No se recibió imagen de la estructura molecular';
+          this.error = 'No molecular structure image received';
         }
         this.loadingStructure = false;
       },
       error: (error: any) => {
         this.error =
-          'Error al cargar la estructura molecular: ' +
-          (error.message || 'Error desconocido');
+          'Error loading molecular structure: ' +
+          (error.message || 'Unknown error');
         this.loadingStructure = false;
       },
     });
   }
-  // Procesar datos SVG (similar al componente de reports)
+  // Process SVG data (similar to reports component)
   private processSVGData(svgData: string): string | null {
     if (!svgData) {
       this.sanitizedSvg = null;
       return null;
     }
-    // Limpiar y formatear el SVG
+    // Clean and format SVG
     let cleanSvg = svgData.trim();
-    // Reemplazar caracteres de codificación problemáticos
+    // Replace problematic encoding characters
     cleanSvg = cleanSvg.replace(/encoding='iso-8859-1'/g, "encoding='UTF-8'");
-    // Asegurar que tenga espacios adecuados entre atributos
+    // Ensure proper spacing between attributes
     cleanSvg = cleanSvg.replace(/xmlns=/g, ' xmlns=');
     cleanSvg = cleanSvg.replace(/xmlns:rdkit=/g, ' xmlns:rdkit=');
     cleanSvg = cleanSvg.replace(/xmlns:xlink=/g, ' xmlns:xlink=');
@@ -728,24 +1062,23 @@ export class FragmentComponent {
     cleanSvg = cleanSvg.replace(/width=/g, ' width=');
     cleanSvg = cleanSvg.replace(/height=/g, ' height=');
     cleanSvg = cleanSvg.replace(/viewBox=/g, ' viewBox=');
-    // Limpiar espacios múltiples
+    // Clean multiple spaces
     cleanSvg = cleanSvg.replace(/\s+/g, ' ');
-    // Formatear correctamente la primera línea
+    // Format first line correctly
     cleanSvg = cleanSvg.replace(
       /^<\?xml[^>]+\?><svg/,
       "<?xml version='1.0' encoding='UTF-8'?>\n<svg"
     );
-    // Sanitizar el SVG para Angular
+    // Sanitize SVG for Angular
     this.sanitizedSvg = this.sanitizer.bypassSecurityTrustHtml(cleanSvg);
     return cleanSvg;
   }
 
-  // Paso 2: Analizar fragmentos
+  // Step 2: Analyze fragments
   analyzeFragment() {
-    // Validar que al menos un formato de exportación esté seleccionado
+    // Validate that at least one export format is selected
     if (!this.exportSmiles && !this.exportXyz) {
-      this.error =
-        'Debes seleccionar al menos un formato de exportación (SMILES o XYZ)';
+      this.error = 'You must select at least one export format (SMILES or XYZ)';
       return;
     }
 
@@ -767,7 +1100,7 @@ export class FragmentComponent {
     this.v1Service.v1FragmentCreate(request).subscribe({
       next: (response) => {
         if (!response.data) {
-          this.error = 'No se recibió información de fragmentos';
+          this.error = 'No fragment information received';
           this.loadingAnalysis = false;
           return;
         }
@@ -777,20 +1110,19 @@ export class FragmentComponent {
       },
       error: (error: any) => {
         this.error =
-          'Error al analizar fragmentos: ' +
-          (error.message || 'Error desconocido');
+          'Error analyzing fragments: ' + (error.message || 'Unknown error');
         this.loadingAnalysis = false;
       },
     });
   }
 
-  // Método para descargar la lista de SMILES
+  // Method to download SMILES list
   downloadSmilesList() {
     if (
       !this.fragmentResults?.smiles_list ||
       this.fragmentResults.smiles_list.length === 0
     ) {
-      this.error = 'No hay lista de SMILES disponible para descargar';
+      this.error = 'No SMILES list available for download';
       return;
     }
 
@@ -811,15 +1143,15 @@ export class FragmentComponent {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      this.error = 'Error al descargar la lista de SMILES';
-      console.error('Error descargando SMILES:', error);
+      this.error = 'Error downloading SMILES list';
+      console.error('Error downloading SMILES:', error);
     }
   }
 
-  // Método para descargar el archivo XYZ
+  // Method to download XYZ file
   downloadXyzFile() {
     if (!this.fragmentResults?.xyz_block) {
-      this.error = 'No hay archivo XYZ disponible para descargar';
+      this.error = 'No XYZ file available for download';
       return;
     }
 
@@ -841,12 +1173,12 @@ export class FragmentComponent {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      this.error = 'Error al descargar el archivo XYZ';
-      console.error('Error descargando XYZ:', error);
+      this.error = 'Error downloading XYZ file';
+      console.error('Error downloading XYZ:', error);
     }
   }
 
-  // Método para obtener el valor BDE por índice de enlace
+  // Method to get BDE value by bond index
   getBDEValue(idx: number): string {
     const found = this.BDE_calated?.find((b) => b.idx === idx);
     return found?.bde !== undefined && found?.bde !== null

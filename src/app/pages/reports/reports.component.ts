@@ -14,15 +14,15 @@ import {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="reports-container">
-      <h1>Reportes y Descargas</h1>
+      <h1>Reports and Downloads</h1>
       <div class="reports-form">
         <div class="form-group">
-          <label for="smiles">SMILES de la Molécula:</label>
+          <label for="smiles">Molecule SMILES:</label>
           <input
             type="text"
             id="smiles"
             [(ngModel)]="smilesInput"
-            placeholder="Ej: CCOc1cccc(O)c1"
+            placeholder="e.g.: CCOc1cccc(O)c1"
             class="form-control"
           />
         </div>
@@ -32,54 +32,54 @@ import {
             [disabled]="loadingInfo || !smilesInput"
             class="btn-secondary"
           >
-            {{ loadingInfo ? 'Consultando...' : 'Información Molecular' }}
+            {{ loadingInfo ? 'Querying...' : 'Molecular Information' }}
           </button>
         </div>
       </div>
 
       <div *ngIf="loading" class="loading">
         <div class="spinner"></div>
-        <p>Generando reporte...</p>
+        <p>Generating report...</p>
       </div>
       <div *ngIf="loadingInfo" class="loading">
         <div class="spinner"></div>
-        <p>Obteniendo información molecular...</p>
+        <p>Getting molecular information...</p>
       </div>
 
       <div *ngIf="svgImage" class="results">
-        <h2>Estructura Molecular</h2>
+        <h2>Molecular Structure</h2>
         <div class="result-card">
           <div class="report-actions">
             <button (click)="downloadSVGFile()" class="btn-download">
-              🖼️ Descargar SVG
+              🖼️ Download SVG
             </button>
             <button
               (click)="downloadPNGFile()"
               class="btn-download"
               style="margin-left: 0.5rem;"
             >
-              📷 Descargar PNG
+              📷 Download PNG
             </button>
           </div>
           <div class="image-container">
             <div class="image-controls">
-              <button (click)="zoomIn()" class="control-btn" title="Acercar">
+              <button (click)="zoomIn()" class="control-btn" title="Zoom In">
                 🔍+
               </button>
-              <button (click)="zoomOut()" class="control-btn" title="Alejar">
+              <button (click)="zoomOut()" class="control-btn" title="Zoom Out">
                 🔍-
               </button>
               <button
                 (click)="resetZoom()"
                 class="control-btn"
-                title="Tamaño original"
+                title="Original Size"
               >
                 ↻
               </button>
               <button
                 (click)="toggleFullscreen()"
                 class="control-btn"
-                title="Pantalla completa"
+                title="Fullscreen"
               >
                 ⛶
               </button>
@@ -94,12 +94,12 @@ import {
               (mouseleave)="endPan()"
               (wheel)="onWheel($event)"
             >
-              <!-- Botón de cerrar pantalla completa -->
+              <!-- Close fullscreen button -->
               <button
                 *ngIf="isFullscreen"
                 (click)="toggleFullscreen()"
                 class="close-fullscreen-btn"
-                title="Cerrar pantalla completa"
+                title="Close fullscreen"
               >
                 ✕
               </button>
@@ -113,11 +113,11 @@ import {
         </div>
       </div>
       <div *ngIf="reportResult" class="results">
-        <h2>Reporte Generado</h2>
+        <h2>Generated Report</h2>
         <div class="result-card">
           <div class="report-actions">
             <button (click)="downloadReportFile()" class="btn-download">
-              📥 Descargar Archivo
+              📥 Download File
             </button>
           </div>
           <div class="report-content">
@@ -127,11 +127,11 @@ import {
       </div>
 
       <div *ngIf="moleculeInfoResult" class="results">
-        <h2>Información Molecular</h2>
+        <h2>Molecular Information</h2>
         <div class="result-card">
           <div class="report-actions">
             <button (click)="downloadReportFile()" class="btn-download">
-              📥 Descargar Información
+              📥 Download Information
             </button>
           </div>
           <div class="report-content">
@@ -534,13 +534,13 @@ export class ReportsComponent {
       return null;
     }
 
-    // Limpiar y formatear el SVG
+    // Clean and format SVG
     let cleanSvg = svgData.trim();
 
-    // Reemplazar caracteres de codificación problemáticos
+    // Replace problematic encoding characters
     cleanSvg = cleanSvg.replace(/encoding='iso-8859-1'/g, "encoding='UTF-8'");
 
-    // Asegurar que tenga espacios adecuados entre atributos
+    // Ensure proper spacing between attributes
     cleanSvg = cleanSvg.replace(/xmlns=/g, ' xmlns=');
     cleanSvg = cleanSvg.replace(/xmlns:rdkit=/g, ' xmlns:rdkit=');
     cleanSvg = cleanSvg.replace(/xmlns:xlink=/g, ' xmlns:xlink=');
@@ -549,16 +549,16 @@ export class ReportsComponent {
     cleanSvg = cleanSvg.replace(/height=/g, ' height=');
     cleanSvg = cleanSvg.replace(/viewBox=/g, ' viewBox=');
 
-    // Limpiar espacios múltiples
+    // Clean multiple spaces
     cleanSvg = cleanSvg.replace(/\s+/g, ' ');
 
-    // Formatear correctamente la primera línea
+    // Format first line correctly
     cleanSvg = cleanSvg.replace(
       /^<\?xml[^>]+\?><svg/,
       "<?xml version='1.0' encoding='UTF-8'?>\n<svg"
     );
 
-    // Sanitizar el SVG para Angular
+    // Sanitize SVG for Angular
     this.sanitizedSvg = this.sanitizer.bypassSecurityTrustHtml(cleanSvg);
 
     return cleanSvg;
@@ -566,36 +566,36 @@ export class ReportsComponent {
 
   downloadReportFile() {
     if (!this.moleculeInfoResult) {
-      this.error = 'No hay información molecular disponible para descargar';
+      this.error = 'No molecular information available for download';
       return;
     }
     try {
       const blob = new Blob([this.moleculeInfoResult], { type: 'text/plain' });
       const url = window.URL.createObjectURL(blob);
-      // Crear un enlace temporal para la descarga
+      // Create temporary link for download
       const link = document.createElement('a');
       link.href = url;
-      link.download = `info_molecular_${this.smilesInput.replace(
+      link.download = `molecular_info_${this.smilesInput.replace(
         /[^a-zA-Z0-9]/g,
         '_'
       )}.txt`;
 
-      // Simular click para descargar
+      // Simulate click to download
       document.body.appendChild(link);
       link.click();
 
-      // Limpiar
+      // Clean up
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      this.error = 'Error al descargar el archivo';
-      console.error('Error descargando archivo:', error);
+      this.error = 'Error downloading file';
+      console.error('Error downloading file:', error);
     }
   }
 
   downloadSVGFile() {
     if (!this.svgImage) {
-      this.error = 'No hay imagen SVG disponible para descargar';
+      this.error = 'No SVG image available for download';
       return;
     }
 
@@ -700,14 +700,14 @@ export class ReportsComponent {
 
       img.src = url;
     } catch (error) {
-      this.error = 'Error al convertir SVG a PNG';
-      console.error('Error convirtiendo a PNG:', error);
+      this.error = 'Error converting SVG to PNG';
+      console.error('Error converting to PNG:', error);
     }
   }
 
   getMoleculeInfo() {
     if (!this.smilesInput.trim()) {
-      this.error = 'Por favor ingresa el SMILES de la molécula';
+      this.error = 'Please enter the molecule SMILES';
       return;
     }
 
@@ -716,7 +716,7 @@ export class ReportsComponent {
     this.moleculeInfoResult = null;
     this.svgImage = null;
     this.sanitizedSvg = null;
-    // Resetear zoom y pan
+    // Reset zoom and pan
     this.resetZoom();
     this.isFullscreen = false;
 
@@ -732,7 +732,7 @@ export class ReportsComponent {
 
         if (!this.svgImage && svgData) {
           console.log(
-            'SVG vacío o inválido. Data recibido:',
+            'Empty or invalid SVG. Data received:',
             svgData.substring(0, 100)
           );
         }
@@ -741,8 +741,8 @@ export class ReportsComponent {
       },
       error: (error: any) => {
         this.error =
-          'Error al obtener información molecular: ' +
-          (error.message || 'Error desconocido');
+          'Error getting molecular information: ' +
+          (error.message || 'Unknown error');
         this.loadingInfo = false;
       },
     });
