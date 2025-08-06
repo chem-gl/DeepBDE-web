@@ -1,0 +1,305 @@
+<div class="home-container">
+  <header class="hero-section">
+    <h1>DeepBDE</h1>
+    <p class="subtitle">
+      Graph Neural Network for Bond Dissociation Enthalpies
+    </p>
+    <p class="description">
+      A web tool based on a Graph Neural Network (GNN) that quickly and
+      accurately predicts bond dissociation enthalpies (BDE) in organic
+      molecules using SMILES representations
+    </p>
+    <div class="citation-section">
+      <p class="citation-text">
+        Based on the official implementation of
+        <a href="https://github.com/MSRG/DeepBDE/" target="_blank" rel="noopener noreferrer" class="github-link">
+          DeepBDE (MSRG/DeepBDE)
+        </a>
+      </p>
+    </div>
+  </header>
+
+  <section class="analysis-section">
+    <div class="mode-selector">
+      <button (click)="setMode('smiles')" [class.active]="selectedMode === 'smiles'" class="mode-btn">
+        SMILES Analysis
+      </button>
+      <button (click)="setMode('fragments')" [class.active]="selectedMode === 'fragments'" class="mode-btn">
+        Fragment Analysis
+      </button>
+    </div>
+
+    @if(selectedMode === 'smiles') {
+    <div class="input-section smiles-section">
+      <div class="input-group">
+        <label for="smiles-input">Enter SMILES Notation:</label>
+        <input id="smiles-input" type="text" [(ngModel)]="smilesInput" placeholder="e.g., CCOc1cccc(O)c1"
+          class="smiles-input" />
+        <small class="input-help">Enter a valid SMILES string for molecular BDE analysis</small>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-primary" (click)="getMoleculeData()" [disabled]="!smilesInput.trim() || loadingInfo">
+          {{ loadingInfo ? 'Analyzing...' : 'Get Molecule Info' }}
+        </button>
+      </div>
+    </div>
+    } @else if(selectedMode === 'fragments') {
+    <div class="input-section fragments-section">
+      <div class="input-group">
+        <label for="parent-smiles">Parent Molecule SMILES:</label>
+        <input id="parent-smiles" type="text" [(ngModel)]="parentSmiles" placeholder="e.g., CCOc1cccc(O)c1"
+          class="parent-smiles-input" />
+        <small class="input-help">Enter the complete molecule SMILES</small>
+      </div>
+
+      <div class="fragments-inputs">
+        <div class="input-group">
+          <label for="fragment1">Fragment 1 SMILES:</label>
+          <input id="fragment1" type="text" [(ngModel)]="fragment1" placeholder="e.g., CCOc1cccc"
+            class="fragment-input" />
+        </div>
+
+        <div class="input-group">
+          <label for="fragment2">Fragment 2 SMILES:</label>
+          <input id="fragment2" type="text" [(ngModel)]="fragment2" placeholder="e.g., Oc1" class="fragment-input" />
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-primary" (click)="getFragmentAnalysis()" [disabled]="
+                !parentSmiles.trim() || !fragment1.trim() || !fragment2.trim() || loadingInfo
+              ">
+          {{ loadingInfo ? 'Analyzing...' : 'Analyze Fragments' }}
+        </button>
+      </div>
+
+      <!-- Fragment BDE Results -->
+      <div *ngIf="bdeFragmentResults" class="fragment-results-section">
+        <h3>Fragment Analysis Results</h3>
+        <div class="fragment-bde-info">
+          <div class="bde-result-card">
+            <h4>Bond Dissociation Energy</h4>
+            <div class="bde-details">
+              <div class="bde-item">
+                <span class="label">BDE Value:</span>
+                <span class="value bde-value">
+                  {{ bdeFragmentResults.bonds_predicted.bde !== null && bdeFragmentResults.bonds_predicted.bde !==
+                  undefined ?
+                  (bdeFragmentResults.bonds_predicted.bde | number:'1.2-2') + ' kcal/mol' : 'N/A' }}
+                </span>
+              </div>
+              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.idx !== undefined">
+                <span class="label">Bond Index:</span>
+                <span class="value">{{ bdeFragmentResults.bonds_predicted.idx }}</span>
+              </div>
+              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.bond_atoms">
+                <span class="label">Bond Atoms:</span>
+                <span class="value bond-atoms">{{ bdeFragmentResults.bonds_predicted.bond_atoms }}</span>
+              </div>
+              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.begin_atom_idx !== undefined">
+                <span class="label">Begin Atom:</span>
+                <span class="value">{{ bdeFragmentResults.bonds_predicted.begin_atom_idx }}</span>
+              </div>
+              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.end_atom_idx !== undefined">
+                <span class="label">End Atom:</span>
+                <span class="value">{{ bdeFragmentResults.bonds_predicted.end_atom_idx }}</span>
+              </div>
+              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.bond_type">
+                <span class="label">Bond Type:</span>
+                <span class="value">{{ bdeFragmentResults.bonds_predicted.bond_type }}</span>
+              </div>
+              <div class="bde-item" *ngIf="bdeFragmentResults.smiles_canonical">
+                <span class="label">Canonical SMILES:</span>
+                <span class="value smiles-text">{{ bdeFragmentResults.smiles_canonical }}</span>
+              </div>
+              <div class="bde-item" *ngIf="bdeFragmentResults.molecule_id">
+                <span class="label">Molecule ID:</span>
+                <span class="value">{{ bdeFragmentResults.molecule_id }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fragment Information -->
+          <div class="fragment-info-card" *ngIf="bdeFragmentResults.fragments">
+            <h4>Fragment Information</h4>
+            <div class="fragment-details">
+              <div class="fragment-item" *ngIf="bdeFragmentResults.fragments.Smile1">
+                <span class="label">Fragment 1:</span>
+                <span class="value smiles-text">{{ bdeFragmentResults.fragments.Smile1 }}</span>
+              </div>
+              <div class="fragment-item" *ngIf="bdeFragmentResults.fragments.Smile2">
+                <span class="label">Fragment 2:</span>
+                <span class="value smiles-text">{{ bdeFragmentResults.fragments.Smile2 }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </section>
+
+  <!-- Loading Section -->
+  <div *ngIf="loadingInfo" class="loading-section">
+    <div class="spinner"></div>
+    <p>Getting molecular information...</p>
+  </div>
+
+  <!-- Results Section -->
+  <div *ngIf="svgImage" class="results-section">
+    <h2>Molecular Structure</h2>
+
+    <div class="image-actions">
+      <button (click)="downloadSVGFile()" class="btn-download">
+        🖼️ Download SVG
+      </button>
+      <button (click)="downloadPNGFile()" class="btn-download" style="margin-left: 0.5rem;">
+        📷 Download PNG
+      </button>
+    </div>
+    <div class="image-container">
+      <div class="image-controls">
+        <button (click)="zoomIn()" class="control-btn" title="Zoom In">
+          🔍+
+        </button>
+        <button (click)="zoomOut()" class="control-btn" title="Zoom Out">
+          🔍-
+        </button>
+        <button (click)="resetZoom()" class="control-btn" title="Original Size">
+          ↻
+        </button>
+        <button (click)="toggleFullscreen()" class="control-btn" title="Fullscreen">
+          ⛶
+        </button>
+      </div>
+      <div class="svg-display" [class.fullscreen]="isFullscreen" #svgContainer (mousedown)="startPan($event)"
+        (mousemove)="onPan($event)" (mouseup)="endPan()" (mouseleave)="endPan()" (wheel)="onWheel($event)">
+        <!-- Close fullscreen button -->
+        <button *ngIf="isFullscreen" (click)="toggleFullscreen()" class="close-fullscreen-btn" title="Close fullscreen">
+          ✕
+        </button>
+        <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransform()"></div>
+      </div>
+    </div>
+
+    <!-- Bond Selection Section -->
+
+    <h3 class="title-bond">Bond Selection Options</h3>
+    <div class="bond-options-horizontal">
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="selectAllBonds" (change)="onSelectAllBondsChange()"
+            class="checkbox-input" />
+          <span class="checkbox-custom"></span>
+          Select all possible bonds
+        </label>
+      </div>
+
+      <div class="custom-bonds-input" [class.disabled]="selectAllBonds">
+        <label for="custom-bonds">Specify bond indices:</label>
+        <input id="custom-bonds" type="text" [(ngModel)]="customBondsInput" placeholder="e.g., 1,2,5-8,10"
+          class="bonds-input" [disabled]="selectAllBonds" />
+      </div>
+    </div>
+    <div class="bond-help-text">
+      <small class="input-help">
+        Enter bond numbers separated by commas. Use dashes for ranges (e.g.,
+        1,2,5-8,10)
+      </small>
+    </div>
+
+    <!-- Result Format Section -->
+
+    <h3 class="title-format">Result Format Options</h3>
+    <div class="format-checkboxes">
+      <div class="format-checkbox-group">
+        <label class="format-checkbox-label">
+          <input type="checkbox" [(ngModel)]="includeXyzFormat" class="format-checkbox-input" />
+          <span class="format-checkbox-custom"></span>
+          XYZ Format
+        </label>
+      </div>
+
+      <div class="format-checkbox-group">
+        <label class="format-checkbox-label">
+          <input type="checkbox" [(ngModel)]="includeSmilesFormat" class="format-checkbox-input" />
+          <span class="format-checkbox-custom"></span>
+          SMILES Format
+        </label>
+      </div>
+    </div>
+    <div class="format-help-text">
+      <small class="input-help">
+        Select one, both, or none of the output formats for the BDE results
+      </small>
+    </div>
+    <div class="bde-action">
+      <button class="btn-bde" (click)="getBDE()" [disabled]="loadingBDE">
+        {{ loadingBDE ? 'Getting BDE...' : 'Get BDE' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- BDE Results Section -->
+  <div *ngIf="bdeResults" class="bde-results-section">
+    <h2>Bond Dissociation Energy Results</h2>
+
+    <!-- BDE Table -->
+    <div class="bde-table-container">
+      <table class="bde-table">
+        <thead>
+          <tr>
+            <th>Bond Index</th>
+            <th>Bond Atoms</th>
+            <th>Begin Atom</th>
+            <th>End Atom</th>
+            <th>BDE (kcal/mol)</th>
+            <th>Bond Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let bond of bdeResults.bonds_predicted" class="bde-row">
+            <td>{{ bond.idx }}</td>
+            <td class="bond-atoms">{{ bond.bond_atoms }}</td>
+            <td>{{ bond.begin_atom_idx }}</td>
+            <td>{{ bond.end_atom_idx }}</td>
+            <td class="bde-value">
+              {{ bond.bde !== null ? (bond.bde | number:'1.2-2') : 'N/A' }}
+            </td>
+            <td class="bond-type">{{ bond.bond_type || 'Unknown' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="export-actions">
+      <h3>Export Data</h3>
+      <div class="export-buttons">
+        <button *ngIf="bdeResults.smiles_list && bdeResults.smiles_list.length > 0" (click)="downloadSmilesData()"
+          class="btn-export">
+          📄 Download SMILES Data
+        </button>
+        <button *ngIf="bdeResults.xyz_block" (click)="downloadXyzData()" class="btn-export">
+          🧪 Download XYZ Data
+        </button>
+        <button (click)="downloadBdeTableCSV()" class="btn-export">
+          📊 Download BDE Table (CSV)
+        </button>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="error" class="error-section">
+    <h3>Error</h3>
+    <p>{{ error }}</p>
+  </div>
+
+  <footer class="footer-section">
+    <p>
+      &copy; 2023 DeepBDE. All rights reserved. designed by
+      <a href="https://github.com/CesarGuzmanLopez/" target="_blank" rel="noopener noreferrer" class="github-link">
+        Cesar Gerardo Guzman Lopez
+      </a>
+    </p>
+  </footer>
+</div>
