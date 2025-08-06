@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
+import { RDKitModule } from '@rdkit/rdkit';
 import {
   BDEEvaluateRequest,
   FragmentResponseData,
@@ -12,7 +13,6 @@ import {
   ObtainBDEFragmentsResponseData,
   V1Service,
 } from '../../../../angular-client';
-
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -21,6 +21,7 @@ import {
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
+  private RDKit!: RDKitModule;
   // Component properties for mode selection
   selectedMode: 'smiles' | 'fragments' = 'smiles';
   smilesInput = '';
@@ -55,6 +56,10 @@ export class HomeComponent {
   // Properties for BDE results
   bdeResults?: FragmentResponseData;
   loadingBDE = false;
+
+
+
+
   constructor(
     private readonly v1Service: V1Service,
     private readonly sanitizer: DomSanitizer

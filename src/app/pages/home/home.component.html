@@ -75,7 +75,7 @@
 
       <!-- Fragment BDE Results -->
       <div *ngIf="bdeFragmentResults" class="fragment-results-section">
-        <h3>Fragment Analysis Results</h3>
+        <h3>Additional printable formats</h3>
         <div class="fragment-bde-info">
           <div class="bde-result-card">
             <h4>Bond Dissociation Energy</h4>
@@ -184,19 +184,19 @@
 
     <!-- Bond Selection Section -->
 
-    <h3 class="title-bond">Bond Selection Options</h3>
+    <h3 class="title-bond">Bond calculation options</h3>
     <div class="bond-options-horizontal">
       <div class="checkbox-group">
         <label class="checkbox-label">
           <input type="checkbox" [(ngModel)]="selectAllBonds" (change)="onSelectAllBondsChange()"
             class="checkbox-input" />
           <span class="checkbox-custom"></span>
-          Select all possible bonds
+          Calculate all non-ring single bonds
         </label>
       </div>
 
       <div class="custom-bonds-input" [class.disabled]="selectAllBonds">
-        <label for="custom-bonds">Specify bond indices:</label>
+        <label for="custom-bonds">Select specific bonds or ranges:</label>
         <input id="custom-bonds" type="text" [(ngModel)]="customBondsInput" placeholder="e.g., 1,2,5-8,10"
           class="bonds-input" [disabled]="selectAllBonds" />
       </div>
@@ -230,7 +230,7 @@
     </div>
     <div class="format-help-text">
       <small class="input-help">
-        Select one, both, or none of the output formats for the BDE results
+        Select one, both, or none of the additional printable formats for the BDE results
       </small>
     </div>
     <div class="bde-action">
@@ -278,13 +278,13 @@
       <div class="export-buttons">
         <button *ngIf="bdeResults.smiles_list && bdeResults.smiles_list.length > 0" (click)="downloadSmilesData()"
           class="btn-export">
-          📄 Download SMILES Data
+          📄 Download BDE fragment SMILES
         </button>
         <button *ngIf="bdeResults.xyz_block" (click)="downloadXyzData()" class="btn-export">
-          🧪 Download XYZ Data
+          🧪 Download BDE fragment XYZ
         </button>
         <button (click)="downloadBdeTableCSV()" class="btn-export">
-          📊 Download BDE Table (CSV)
+          📊 Download this Table (CSV)
         </button>
       </div>
     </div>
