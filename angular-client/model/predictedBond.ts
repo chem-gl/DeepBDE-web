@@ -20,6 +20,7 @@ export interface PredictedBond {
     end_atom_idx: number;
     bond_atoms: string;
     bond_type?: BondTypeEnum;
+    is_fragmentable: boolean;
 }
 export namespace PredictedBond {
 }

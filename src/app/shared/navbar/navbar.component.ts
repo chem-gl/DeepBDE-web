@@ -23,9 +23,6 @@ import { RouterModule } from '@angular/router';
           >
             🏠 Home
           </a>
-          <a routerLink="/fragment" routerLinkActive="active" class="nav-link">
-            🧪 Fragment Analysis
-          </a>
           <a routerLink="/reports" routerLinkActive="active" class="nav-link">
             📊 Reports
           </a>

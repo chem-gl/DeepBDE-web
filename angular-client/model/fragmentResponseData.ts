@@ -7,21 +7,16 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { BDEValues } from './bDEValues';
-import { EvaluatedFragmentBond } from './evaluatedFragmentBond';
+import { PredictedBond } from './predictedBond';
 
 
 /**
- * Salida de /fragment/. - bde_values: Lista de objetos bde_values - smiles_canonical: SMILES canónico - molecule_id: ID de la molécula - bonds: Lista de enlaces evaluados - smiles_list: Lista de SMILES (opcional) - xyz_block: Cadena XYZ (opcional)
+ * Salida de /fragment/. - smiles_canonical: SMILES canónico de la molécula original - molecule_id: ID de la molécula - bonds_predicted: Lista de enlaces predichos - smiles_list: Lista de SMILES de los fragmentos (opcional) - xyz_block: Bloque XYZ de los fragmentos (opcional)
  */
 export interface FragmentResponseData { 
-    /**
-     * Lista de objetos BDEValues
-     */
-    bde_values: Array<BDEValues>;
     smiles_canonical: string;
     molecule_id: string;
-    bonds: Array<EvaluatedFragmentBond>;
+    bonds_predicted: Array<PredictedBond>;
     smiles_list?: Array<string> | null;
     xyz_block?: string | null;
 }

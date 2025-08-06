@@ -10,10 +10,10 @@
 
 
 /**
- * Representa los valores de BDE para un enlace. - idx: Índice del enlace - bde: Valor de BDE
+ * Fragmentos de la molécula.
  */
-export interface BDEValues { 
-    idx: number;
-    bde: number | null;
+export interface Fragments { 
+    Smile1: string;
+    Smile2: string;
 }
 

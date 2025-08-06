@@ -33,15 +33,19 @@ import { APIResponsePredictMultipleResponseData } from '../model/aPIResponsePred
 // @ts-ignore
 import { APIResponsePredictSingleResponseData } from '../model/aPIResponsePredictSingleResponseData';
 // @ts-ignore
-import { DownloadReportRequest } from '../model/downloadReportRequest';
+import { BDEEvaluateRequest } from '../model/bDEEvaluateRequest';
 // @ts-ignore
-import { FragmentRequest } from '../model/fragmentRequest';
+import { DownloadReportRequest } from '../model/downloadReportRequest';
 // @ts-ignore
 import { InferAllRequest } from '../model/inferAllRequest';
 // @ts-ignore
 import { MoleculeInfoRequest } from '../model/moleculeInfoRequest';
 // @ts-ignore
 import { MoleculeSmileCanonicalRequest } from '../model/moleculeSmileCanonicalRequest';
+// @ts-ignore
+import { ObtainBDEFragmentsRequest } from '../model/obtainBDEFragmentsRequest';
+// @ts-ignore
+import { ObtainBDEFragmentsResponseData } from '../model/obtainBDEFragmentsResponseData';
 // @ts-ignore
 import { PredictCheckRequest } from '../model/predictCheckRequest';
 // @ts-ignore
@@ -63,6 +67,74 @@ export class V1Service extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     *          Genera fragmentos moleculares en formato SMILES o XYZ.         Generates molecular fragments in SMILES or XYZ format.         
+     * @param bDEEvaluateRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public v1BDEEvaluateCreate(bDEEvaluateRequest: BDEEvaluateRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<APIResponseFragmentResponseData>;
+    public v1BDEEvaluateCreate(bDEEvaluateRequest: BDEEvaluateRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<APIResponseFragmentResponseData>>;
+    public v1BDEEvaluateCreate(bDEEvaluateRequest: BDEEvaluateRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<APIResponseFragmentResponseData>>;
+    public v1BDEEvaluateCreate(bDEEvaluateRequest: BDEEvaluateRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+        if (bDEEvaluateRequest === null || bDEEvaluateRequest === undefined) {
+            throw new Error('Required parameter bDEEvaluateRequest was null or undefined when calling v1BDEEvaluateCreate.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (basicAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('basicAuth', 'Authorization', localVarHeaders, 'Basic ');
+
+        // authentication (cookieAuth) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json',
+            'application/x-www-form-urlencoded',
+            'multipart/form-data'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/BDEEvaluate/`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<APIResponseFragmentResponseData>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: bDEEvaluateRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**
@@ -134,74 +206,6 @@ export class V1Service extends BaseService {
     }
 
     /**
-     *          Genera fragmentos moleculares en formato SMILES o XYZ.         Generates molecular fragments in SMILES or XYZ format.         
-     * @param fragmentRequest 
-     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
-     * @param reportProgress flag to report request and response progress.
-     */
-    public v1FragmentCreate(fragmentRequest: FragmentRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<APIResponseFragmentResponseData>;
-    public v1FragmentCreate(fragmentRequest: FragmentRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<APIResponseFragmentResponseData>>;
-    public v1FragmentCreate(fragmentRequest: FragmentRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<APIResponseFragmentResponseData>>;
-    public v1FragmentCreate(fragmentRequest: FragmentRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
-        if (fragmentRequest === null || fragmentRequest === undefined) {
-            throw new Error('Required parameter fragmentRequest was null or undefined when calling v1FragmentCreate.');
-        }
-
-        let localVarHeaders = this.defaultHeaders;
-
-        // authentication (basicAuth) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('basicAuth', 'Authorization', localVarHeaders, 'Basic ');
-
-        // authentication (cookieAuth) required
-
-        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
-            'application/json'
-        ]);
-        if (localVarHttpHeaderAcceptSelected !== undefined) {
-            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
-        }
-
-        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
-
-
-        // to determine the Content-Type header
-        const consumes: string[] = [
-            'application/json',
-            'application/x-www-form-urlencoded',
-            'multipart/form-data'
-        ];
-        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
-        if (httpContentTypeSelected !== undefined) {
-            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
-        }
-
-        let responseType_: 'text' | 'json' | 'blob' = 'json';
-        if (localVarHttpHeaderAcceptSelected) {
-            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
-                responseType_ = 'text';
-            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
-                responseType_ = 'json';
-            } else {
-                responseType_ = 'blob';
-            }
-        }
-
-        let localVarPath = `/api/v1/fragment/`;
-        const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<APIResponseFragmentResponseData>('post', `${basePath}${localVarPath}`,
-            {
-                context: localVarHttpContext,
-                body: fragmentRequest,
-                responseType: <any>responseType_,
-                ...(withCredentials ? { withCredentials } : {}),
-                headers: localVarHeaders,
-                observe: observe,
-                reportProgress: reportProgress
-            }
-        );
-    }
-
-    /**
      *          Predice las energías de disociación para todos los enlaces simples de la molécula dada.         Predicts the dissociation energies for all single bonds of the given molecule.         
      * @param inferAllRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -260,6 +264,74 @@ export class V1Service extends BaseService {
             {
                 context: localVarHttpContext,
                 body: inferAllRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     *          Obtiene la energía de disociación de enlaces para una molécula basada en SMILES y los fragmentos proporcionados.         Obtains the dissociation energy of bonds for a molecule based on SMILES and provided fragments.         
+     * @param obtainBDEFragmentsRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public v1ObtainBDEFragmentsCreate(obtainBDEFragmentsRequest: ObtainBDEFragmentsRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<ObtainBDEFragmentsResponseData>;
+    public v1ObtainBDEFragmentsCreate(obtainBDEFragmentsRequest: ObtainBDEFragmentsRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<ObtainBDEFragmentsResponseData>>;
+    public v1ObtainBDEFragmentsCreate(obtainBDEFragmentsRequest: ObtainBDEFragmentsRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<ObtainBDEFragmentsResponseData>>;
+    public v1ObtainBDEFragmentsCreate(obtainBDEFragmentsRequest: ObtainBDEFragmentsRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+        if (obtainBDEFragmentsRequest === null || obtainBDEFragmentsRequest === undefined) {
+            throw new Error('Required parameter obtainBDEFragmentsRequest was null or undefined when calling v1ObtainBDEFragmentsCreate.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (basicAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('basicAuth', 'Authorization', localVarHeaders, 'Basic ');
+
+        // authentication (cookieAuth) required
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json',
+            'application/x-www-form-urlencoded',
+            'multipart/form-data'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/ObtainBDEFragments/`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<ObtainBDEFragmentsResponseData>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: obtainBDEFragmentsRequest,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

@@ -7,12 +7,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { Fragments } from './fragments';
 
 
 /**
- * Entrada para /predict/. - smiles: SMILES de la molécula
+ * Entrada para /ObtainBDEFragments/. - smiles: SMILES de la molécula - fragments: Fragmentos de la molécula
  */
-export interface MoleculeInfoRequest { 
+export interface ObtainBDEFragmentsRequest { 
     smiles: string;
+    fragments: Fragments;
 }
 
