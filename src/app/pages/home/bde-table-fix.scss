@@ -1,0 +1,42 @@
+/* CORRECCIÓN: Evitar mayúsculas en encabezados de tabla BDE */
+
+/* Reemplazar estas reglas en home.component.scss: */
+
+/* ANTES:
+.bde-table th {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;  // <-- PROBLEMA: Convierte "kcal" a "KCAL"
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.bde-table .bond-type {
+  font-size: 0.85rem;
+  color: #4a5568;
+  text-transform: uppercase;  // <-- También está mal aquí
+}
+*/
+
+/* DESPUÉS (CORRECTO): */
+.bde-table th {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: none; /* <-- CORRECCIÓN: No convertir a mayúsculas */
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.bde-table .bond-type {
+  font-size: 0.85rem;
+  color: #4a5568;
+  text-transform: capitalize; /* <-- CORRECCIÓN: Solo primera letra mayúscula */
+}
+
+/*
+EXPLICACIÓN:
+- "kcal/mol" debe mantenerse así, no "KCAL/MOL"
+- Los términos científicos tienen capitalización específica
+- "text-transform: none" preserva la capitalización original
+- "text-transform: capitalize" solo pone la primera letra en mayúscula
+*/

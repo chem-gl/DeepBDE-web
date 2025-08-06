@@ -25,9 +25,9 @@ export class HomeComponent {
   // Component properties for mode selection
   selectedMode: 'smiles' | 'fragments' = 'smiles';
   smilesInput = '';
-  parentSmiles = '';
-  fragment1 = '';
-  fragment2 = '';
+  parentSmiles = 'C1=NC2=C(N1)N=CN2[C@H]3O[C@H](CO)[C@@H](O)[C@H]3O';
+  fragment1 = 'O[C@@H]1[C@H](O)[CH]O[C@@H]1n1cnc2[nH]cnc21';
+  fragment2 = '[CH2]O';
 
   // Properties for molecular analysis
   loadingInfo = false;
@@ -57,9 +57,6 @@ export class HomeComponent {
   bdeResults?: FragmentResponseData;
   loadingBDE = false;
 
-
-
-
   constructor(
     private readonly v1Service: V1Service,
     private readonly sanitizer: DomSanitizer
@@ -77,9 +74,10 @@ export class HomeComponent {
     this.selectedMode = mode;
     // Clear inputs when switching modes
     this.smilesInput = '';
-    this.parentSmiles = '';
-    this.fragment1 = '';
-    this.fragment2 = '';
+    // Reset fragment inputs to default values
+    this.parentSmiles = 'C1=NC2=C(N1)N=CN2[C@H]3O[C@H](CO)[C@@H](O)[C@H]3O';
+    this.fragment1 = 'O[C@@H]1[C@H](O)[CH]O[C@@H]1n1cnc2[nH]cnc21';
+    this.fragment2 = '[CH2]O';
     // Clear results
     this.clearResults();
   }
