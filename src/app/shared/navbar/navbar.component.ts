@@ -23,8 +23,11 @@ import { RouterModule } from '@angular/router';
           >
             🏠 Home
           </a>
-          <a routerLink="/reports" routerLinkActive="active" class="nav-link">
-            📊 Reports
+          <a routerLink="/about" routerLinkActive="active" class="nav-link">
+            ℹ️ About
+          </a>
+          <a routerLink="/citation" routerLinkActive="active" class="nav-link">
+            📄 Citation
           </a>
         </div>
       </div>
