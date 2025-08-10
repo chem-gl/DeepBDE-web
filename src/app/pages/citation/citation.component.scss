@@ -1,0 +1,425 @@
+.citation-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  line-height: 1.6;
+  background: #efeeed;
+  min-height: 100vh;
+  border-radius: 20px;
+}
+
+.citation-hero {
+  text-align: center;
+  padding: 3rem 0;
+  background: linear-gradient(
+      135deg,
+      rgba(78, 125, 194, 0.8) 0%,
+      rgba(0, 56, 118, 0.9) 100%
+    ),
+    url("/academic-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  border-radius: 20px;
+  color: white;
+  margin-bottom: 3rem;
+  box-shadow: 0 10px 40px rgba(0, 33, 69, 0.3);
+  border: 2px solid #9cacc3;
+}
+
+.citation-hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+  font-size: 1.3rem;
+  opacity: 0.95;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.citation-formats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.format-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 33, 69, 0.1);
+  border: 2px solid #d3d1cb;
+  transition: all 0.3s ease;
+}
+
+.format-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 33, 69, 0.2);
+  border-color: #4e7dc2;
+}
+
+.format-card h3 {
+  font-size: 1.5rem;
+  color: #4e7dc2;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.citation-box {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.5rem;
+  position: relative;
+}
+
+.citation-box pre {
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.copy-btn {
+  background: #4e7dc2;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.copy-btn:hover {
+  background: #3d6ba6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(78, 125, 194, 0.3);
+}
+
+.demo-section {
+  margin-bottom: 3rem;
+}
+
+.demo-section h2 {
+  font-size: 2.5rem;
+  color: #002145;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.demo-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 33, 69, 0.1);
+  border: 2px solid #d3d1cb;
+  transition: all 0.3s ease;
+}
+
+.demo-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 33, 69, 0.2);
+  border-color: #4e7dc2;
+}
+
+.demo-card h4 {
+  font-size: 1.3rem;
+  color: #4e7dc2;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.demo-smiles {
+  display: inline-block;
+  background: #f7fafc;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  margin: 0.5rem 0;
+}
+
+.demo-description {
+  font-size: 0.9rem;
+  color: #6c7b8e;
+  margin-top: 1rem;
+}
+
+.editor-preview {
+  text-align: center;
+  padding: 2rem;
+  background: #f7fafc;
+  border-radius: 10px;
+  margin: 1rem 0;
+}
+
+.editor-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.resources-section {
+  margin-bottom: 3rem;
+}
+
+.resources-section h2 {
+  font-size: 2.5rem;
+  color: #002145;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.resource-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 33, 69, 0.1);
+  border: 2px solid #d3d1cb;
+  transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 33, 69, 0.2);
+  border-color: #4e7dc2;
+}
+
+.resource-card h4 {
+  font-size: 1.3rem;
+  color: #4e7dc2;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.resource-card p {
+  color: #6c7b8e;
+  margin-bottom: 1.5rem;
+}
+
+.resource-link {
+  display: inline-block;
+  background: #4e7dc2;
+  color: white;
+  text-decoration: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.resource-link:hover {
+  background: #3d6ba6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(78, 125, 194, 0.3);
+}
+
+.usage-guidelines {
+  background: #f7fafc;
+  padding: 3rem;
+  border-radius: 20px;
+  margin-bottom: 3rem;
+  border: 2px solid #e2e8f0;
+}
+
+.usage-guidelines h2 {
+  font-size: 2.5rem;
+  color: #002145;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.guidelines-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.guideline-item {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 33, 69, 0.1);
+}
+
+.guideline-item h4 {
+  font-size: 1.3rem;
+  color: #4e7dc2;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.guideline-item ul {
+  list-style: none;
+  padding: 0;
+}
+
+.guideline-item li {
+  padding: 0.5rem 0;
+  color: #6c7b8e;
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.guideline-item li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #4e7dc2;
+  font-weight: bold;
+}
+
+.guideline-item li:last-child {
+  border-bottom: none;
+}
+
+.feedback-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 3rem;
+  border-radius: 20px;
+  text-align: center;
+  color: white;
+}
+
+.feedback-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.feedback-content p {
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  opacity: 0.95;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.feedback-btn {
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.feedback-btn.primary {
+  background: white;
+  color: #667eea;
+}
+
+.feedback-btn.secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+}
+
+.feedback-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.feedback-btn.primary:hover {
+  background: #f7fafc;
+}
+
+.feedback-btn.secondary:hover {
+  background: white;
+  color: #667eea;
+}
+
+@media (max-width: 768px) {
+  .citation-container {
+    padding: 1rem;
+  }
+
+  .citation-hero {
+    padding: 2rem 1rem;
+  }
+
+  .citation-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .citation-formats {
+    grid-template-columns: 1fr;
+  }
+
+  .format-card {
+    padding: 1.5rem;
+  }
+
+  .citation-box {
+    padding: 1rem;
+  }
+
+  .copy-btn {
+    position: static;
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .demo-grid,
+  .resources-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guidelines-content {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feedback-btn {
+    width: 200px;
+  }
+
+  .usage-guidelines {
+    padding: 2rem 1rem;
+  }
+
+  .feedback-section {
+    padding: 2rem 1rem;
+  }
+}

@@ -30,7 +30,7 @@ export class HomeComponent {
   sanitizedSvg: SafeHtml | null = null;
 
   // Properties for zoom and pan
-  zoom = 1;
+  zoom = 1.7;
   panX = 0;
   panY = 0;
   isPanning = false;
@@ -74,11 +74,8 @@ export class HomeComponent {
   }
 
   private setupKetcherIfAvailable() {
-    // Verificar si el iframe existe antes de configurarlo
     if (this.ketcherFrame && this.ketcherFrame.nativeElement) {
-      // Esperar a que el iframe se cargue completamente
       this.ketcherFrame.nativeElement.onload = () => {
-        // Esperar un poco más para asegurar que Ketcher esté completamente inicializado
         setTimeout(() => {
           this.ketcherLoaded = true;
           console.log('Ketcher loaded and ready');
@@ -87,16 +84,13 @@ export class HomeComponent {
     }
   }
 
-  // Método que se llama cuando se cambia al modo fragments
   private initKetcherWhenModeChanges() {
-    // Usar setTimeout para asegurar que el DOM se haya actualizado
     setTimeout(() => {
       this.setupKetcherIfAvailable();
     }, 100);
   }
 
   async getSmiles() {
-    // Verificar que el iframe existe antes de intentar acceder
     if (!this.ketcherFrame || !this.ketcherFrame.nativeElement) {
       console.error(
         'Ketcher iframe is not available. Make sure you are in Draw Molecule mode.'
@@ -124,47 +118,37 @@ export class HomeComponent {
         return;
       }
 
-      // Usar la API específica de Ketcher para obtener SMILES
       const ketcher = (iframeWin as any).ketcher;
       if (!ketcher) {
         console.error('Ketcher API not available');
         this.error =
           'Molecular editor API is not available. Trying alternative method...';
-        // Método alternativo usando postMessage (fallback)
         this.getSmilesViaPostMessage();
         return;
       }
 
-      // Obtener la molécula como SMILES
       const smilesResult = await ketcher.getSmiles();
 
       if (!smilesResult || smilesResult.trim() === '') {
         this.error = 'No molecule drawn. Please draw a molecule first.';
         return;
       }
-
-      // Validar que el SMILES contenga solo una molécula
       if (!this.isValidSingleMolecule(smilesResult)) {
-        return; // El error se establece en la función de validación
+        return;
       }
 
       this.smiles = smilesResult;
       console.log('SMILES obtenido de Ketcher:', this.smiles);
-
-      // Opcional: También puedes actualizar el campo smilesInput para usar en el análisis
       this.smilesInput = this.smiles;
     } catch (error) {
       console.error('Error obteniendo SMILES de Ketcher:', error);
       this.error =
         'Error getting SMILES from molecular editor. Trying alternative method...';
-
-      // Método alternativo usando postMessage (fallback)
       this.getSmilesViaPostMessage();
     }
   }
 
   private getSmilesViaPostMessage() {
-    // Verificar que el iframe existe antes de intentar acceder
     if (!this.ketcherFrame || !this.ketcherFrame.nativeElement) {
       console.error('Ketcher iframe is not available for postMessage fallback');
       return;
@@ -172,20 +156,14 @@ export class HomeComponent {
 
     const iframeWin = this.ketcherFrame.nativeElement.contentWindow;
     if (iframeWin) {
-      // Usar el protocolo de mensajes de Ketcher
       const messageId = Math.random().toString(36).substr(2, 9);
-
-      // Crear el listener para la respuesta
       const messageHandler = (event: MessageEvent) => {
         if (event.data && event.data.id === messageId) {
           if (event.data.type === 'result') {
             const receivedSmiles = event.data.payload;
-
-            // Validar que el SMILES contenga solo una molécula
             if (!this.isValidSingleMolecule(receivedSmiles)) {
-              return; // El error se establece en la función de validación
+              return;
             }
-
             this.smiles = receivedSmiles;
             this.smilesInput = this.smiles;
             console.log('SMILES recibido via postMessage:', this.smiles);
