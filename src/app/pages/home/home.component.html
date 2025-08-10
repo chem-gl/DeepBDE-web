@@ -25,7 +25,7 @@
         SMILES Analysis
       </button>
       <button (click)="setMode('fragments')" [class.active]="selectedMode === 'fragments'" class="mode-btn">
-        Fragment Analysis
+        Draw Molecule
       </button>
     </div>
 
@@ -35,7 +35,9 @@
         <label for="smiles-input">Enter SMILES Notation:</label>
         <input id="smiles-input" type="text" [(ngModel)]="smilesInput" placeholder="e.g., CCOc1cccc(O)c1"
           class="smiles-input" />
-        <small class="input-help">Enter a valid SMILES string for molecular BDE analysis</small>
+        <small class="input-help">
+          Enter a valid SMILES string for a single molecule (no dots "." allowed for fragments)
+        </small>
       </div>
       <div class="action-buttons">
         <button class="btn-primary" (click)="getMoleculeData()" [disabled]="!smilesInput.trim() || loadingInfo">
@@ -44,109 +46,66 @@
       </div>
     </div>
     } @else if(selectedMode === 'fragments') {
-    <div class="input-section fragments-section">
-      <div class="input-group">
-        <label for="parent-smiles">Parent Molecule SMILES:</label>
-        <input id="parent-smiles" type="text" [(ngModel)]="parentSmiles" placeholder="e.g., CCOc1cccc(O)c1"
-          class="parent-smiles-input" />
-        <small class="input-help">Enter the complete molecule SMILES</small>
+    <div class="draw-section">
+      <h3>Draw Your Molecule</h3>
+      <p class="draw-help">Use the molecular editor below to draw your molecule structure.</p>
+      <div class="draw-warning">
+        <small>⚠️ Please draw only ONE connected molecule. Disconnected fragments will be rejected.</small>
       </div>
 
-      <div class="fragments-inputs">
-        <div class="input-group">
-          <label for="fragment1">Fragment 1 SMILES:</label>
-          <input id="fragment1" type="text" [(ngModel)]="fragment1" placeholder="e.g., CCOc1cccc"
-            class="fragment-input" />
-        </div>
+      <iframe #ketcherFrame src="ketcher/index.html" width="100%" height="700" frameborder="0"></iframe>
 
-        <div class="input-group">
-          <label for="fragment2">Fragment 2 SMILES:</label>
-          <input id="fragment2" type="text" [(ngModel)]="fragment2" placeholder="e.g., Oc1" class="fragment-input" />
-        </div>
-      </div>
-
-      <div class="action-buttons">
-        <button class="btn-primary" (click)="getFragmentAnalysis()" [disabled]="
-                !parentSmiles.trim() || !fragment1.trim() || !fragment2.trim() || loadingInfo
-              ">
-          {{ loadingInfo ? 'Analyzing...' : 'Analyze Fragments' }}
+      <div class="draw-actions">
+        <button (click)="getSmiles()" class="btn-secondary" [disabled]="!ketcherLoaded">
+          @if(!ketcherLoaded) {
+          ⏳ Loading Ketcher...
+          } @else {
+          📋 Get SMILES from Drawing
+          }
         </button>
+
+        <button (click)="reloadKetcher()" class="btn-secondary" title="Reload molecular editor">
+          🔄 Reload Editor
+        </button>
+
+        @if(smiles) {
+        <button (click)="analyzeMoleculeFromDrawing()" class="btn-primary" [disabled]="loadingInfo">
+          {{ loadingInfo ? 'Analyzing...' : '🔬 Analyze Molecule' }}
+        </button>
+        }
       </div>
 
-      <!-- Fragment BDE Results -->
-      <div *ngIf="bdeFragmentResults" class="fragment-results-section">
-        <h3>Additional printable formats</h3>
-        <div class="fragment-bde-info">
-          <div class="bde-result-card">
-            <h4>Bond Dissociation Energy</h4>
-            <div class="bde-details">
-              <div class="bde-item">
-                <span class="label">BDE Value:</span>
-                <span class="value bde-value">
-                  {{ bdeFragmentResults.bonds_predicted.bde !== null && bdeFragmentResults.bonds_predicted.bde !==
-                  undefined ?
-                  (bdeFragmentResults.bonds_predicted.bde | number:'1.2-2') + ' kcal/mol' : 'N/A' }}
-                </span>
-              </div>
-              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.idx !== undefined">
-                <span class="label">Bond Index:</span>
-                <span class="value">{{ bdeFragmentResults.bonds_predicted.idx }}</span>
-              </div>
-              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.bond_atoms">
-                <span class="label">Bond Atoms:</span>
-                <span class="value bond-atoms">{{ bdeFragmentResults.bonds_predicted.bond_atoms }}</span>
-              </div>
-              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.begin_atom_idx !== undefined">
-                <span class="label">Begin Atom:</span>
-                <span class="value">{{ bdeFragmentResults.bonds_predicted.begin_atom_idx }}</span>
-              </div>
-              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.end_atom_idx !== undefined">
-                <span class="label">End Atom:</span>
-                <span class="value">{{ bdeFragmentResults.bonds_predicted.end_atom_idx }}</span>
-              </div>
-              <div class="bde-item" *ngIf="bdeFragmentResults.bonds_predicted.bond_type">
-                <span class="label">Bond Type:</span>
-                <span class="value">{{ bdeFragmentResults.bonds_predicted.bond_type }}</span>
-              </div>
-              <div class="bde-item" *ngIf="bdeFragmentResults.smiles_canonical">
-                <span class="label">Canonical SMILES:</span>
-                <span class="value smiles-text">{{ bdeFragmentResults.smiles_canonical }}</span>
-              </div>
-              <div class="bde-item" *ngIf="bdeFragmentResults.molecule_id">
-                <span class="label">Molecule ID:</span>
-                <span class="value">{{ bdeFragmentResults.molecule_id }}</span>
-              </div>
-            </div>
-          </div>
+      @if(!ketcherLoaded) {
+      <div class="ketcher-loading-info">
+        <p>⏳ Please wait while the molecular editor loads...</p>
+      </div>
+      }
 
-          <!-- Fragment Information -->
-          <div class="fragment-info-card" *ngIf="bdeFragmentResults.fragments">
-            <h4>Fragment Information</h4>
-            <div class="fragment-details">
-              <div class="fragment-item" *ngIf="bdeFragmentResults.fragments.Smile1">
-                <span class="label">Fragment 1:</span>
-                <span class="value smiles-text">{{ bdeFragmentResults.fragments.Smile1 }}</span>
-              </div>
-              <div class="fragment-item" *ngIf="bdeFragmentResults.fragments.Smile2">
-                <span class="label">Fragment 2:</span>
-                <span class="value smiles-text">{{ bdeFragmentResults.fragments.Smile2 }}</span>
-              </div>
-            </div>
-          </div>
+      @if(smiles) {
+      <div class="smiles-display">
+        <h4>Generated SMILES:</h4>
+        <div class="smiles-box">
+          <code>{{ smiles }}</code>
+          <button (click)="copySmilesToClipboard()" class="btn-copy" title="Copy to clipboard">
+            📋
+          </button>
         </div>
       </div>
+      }
     </div>
     }
   </section>
 
   <!-- Loading Section -->
-  <div *ngIf="loadingInfo" class="loading-section">
+  @if(loadingInfo) {
+  <div class="loading-section">
     <div class="spinner"></div>
     <p>Getting molecular information...</p>
   </div>
-
+  }
   <!-- Results Section -->
-  <div *ngIf="svgImage" class="results-section">
+  @if(svgImage) {
+  <div class="results-section">
     <h2>Molecular Structure</h2>
 
     <div class="image-actions">
@@ -175,15 +134,15 @@
       <div class="svg-display" [class.fullscreen]="isFullscreen" #svgContainer (mousedown)="startPan($event)"
         (mousemove)="onPan($event)" (mouseup)="endPan()" (mouseleave)="endPan()" (wheel)="onWheel($event)">
         <!-- Close fullscreen button -->
-        <button *ngIf="isFullscreen" (click)="toggleFullscreen()" class="close-fullscreen-btn" title="Close fullscreen">
+        @if(isFullscreen) {
+        <button (click)="toggleFullscreen()" class="close-fullscreen-btn" title="Close fullscreen">
           ✕
         </button>
+        }
         <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransform()"></div>
       </div>
     </div>
-
     <!-- Bond Selection Section -->
-
     <h3 class="title-bond">Bond calculation options</h3>
     <div class="bond-options-horizontal">
       <div class="checkbox-group">
@@ -239,11 +198,11 @@
       </button>
     </div>
   </div>
-
+  }
   <!-- BDE Results Section -->
-  <div *ngIf="bdeResults" class="bde-results-section">
+  @if(bdeResults) {
+  <div class="bde-results-section">
     <h2>Bond Dissociation Energy Results</h2>
-
     <!-- BDE Table -->
     <div class="bde-table-container">
       <table class="bde-table">
@@ -258,7 +217,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let bond of bdeResults.bonds_predicted" class="bde-row">
+          @for( bond of bdeResults.bonds_predicted; track bond.idx){
+          <tr class="bde-row">
             <td>{{ bond.idx }}</td>
             <td class="bond-atoms">{{ bond.bond_atoms }}</td>
             <td>{{ bond.begin_atom_idx }}</td>
@@ -268,6 +228,7 @@
             </td>
             <td class="bond-type">{{ bond.bond_type || 'Unknown' }}</td>
           </tr>
+          }
         </tbody>
       </table>
     </div>
@@ -276,27 +237,40 @@
     <div class="export-actions">
       <h3>Export Data</h3>
       <div class="export-buttons">
-        <button *ngIf="bdeResults.smiles_list && bdeResults.smiles_list.length > 0" (click)="downloadSmilesData()"
-          class="btn-export">
+        @if(bdeResults.smiles_list && bdeResults.smiles_list.length > 0){
+        <button (click)="downloadSmilesData()" class="btn-export">
           📄 Download BDE fragment SMILES
         </button>
-        <button *ngIf="bdeResults.xyz_block" (click)="downloadXyzData()" class="btn-export">
+        }
+        @if(bdeResults.xyz_block){
+        <button (click)="downloadXyzData()" class="btn-export">
           🧪 Download BDE fragment XYZ
         </button>
+        }
         <button (click)="downloadBdeTableCSV()" class="btn-export">
           📊 Download this Table (CSV)
         </button>
       </div>
     </div>
   </div>
-  <div *ngIf="error" class="error-section">
-    <h3>Error</h3>
-    <p>{{ error }}</p>
+  }
+  @if(error) {
+  <div class="error-section">
+    <h3>⚠️ Error</h3>
+    <div class="error-message">
+      <p>{{ error }}</p>
+      @if(error.includes('multiple fragments') || error.includes('dots')) {
+      <div class="error-help">
+        <strong>Tip:</strong> Make sure to draw a single connected molecule.
+        If you see disconnected parts, use bonds to connect them or remove the extra fragments.
+      </div>
+      }
+    </div>
   </div>
+  }
   <footer class="footer-section">
     <p>
       &copy; 2023 DeepBDE. All rights reserved. designed by ????
-
     </p>
   </footer>
 </div>

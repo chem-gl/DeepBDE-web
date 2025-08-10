@@ -1,15 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { RDKitModule } from '@rdkit/rdkit';
 import {
   BDEEvaluateRequest,
   FragmentResponseData,
   MoleculeInfoRequest,
   MoleculeInfoResponseData,
-  ObtainBDEFragmentsRequest,
   ObtainBDEFragmentsResponseData,
   V1Service,
 } from '../../../../angular-client';
@@ -21,13 +19,9 @@ import {
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
-  private RDKit!: RDKitModule;
   // Component properties for mode selection
   selectedMode: 'smiles' | 'fragments' = 'smiles';
   smilesInput = '';
-  parentSmiles = 'C1=NC2=C(N1)N=CN2[C@H]3O[C@H](CO)[C@@H](O)[C@H]3O';
-  fragment1 = 'O[C@@H]1[C@H](O)[CH]O[C@@H]1n1cnc2[nH]cnc21';
-  fragment2 = '[CH2]O';
 
   // Properties for molecular analysis
   loadingInfo = false;
@@ -56,7 +50,7 @@ export class HomeComponent {
   // Properties for BDE results
   bdeResults?: FragmentResponseData;
   loadingBDE = false;
-
+  private editor: any;
   constructor(
     private readonly v1Service: V1Service,
     private readonly sanitizer: DomSanitizer
@@ -69,17 +63,296 @@ export class HomeComponent {
     });
   }
 
-  // Method to change analysis mode
+  @ViewChild('ketcherFrame') ketcherFrame!: ElementRef<HTMLIFrameElement>;
+
+  smiles = '';
+  ketcherLoaded = false;
+
+  ngAfterViewInit() {
+    // Solo configurar el iframe si está presente en el DOM
+    this.setupKetcherIfAvailable();
+  }
+
+  private setupKetcherIfAvailable() {
+    // Verificar si el iframe existe antes de configurarlo
+    if (this.ketcherFrame && this.ketcherFrame.nativeElement) {
+      // Esperar a que el iframe se cargue completamente
+      this.ketcherFrame.nativeElement.onload = () => {
+        // Esperar un poco más para asegurar que Ketcher esté completamente inicializado
+        setTimeout(() => {
+          this.ketcherLoaded = true;
+          console.log('Ketcher loaded and ready');
+        }, 1000);
+      };
+    }
+  }
+
+  // Método que se llama cuando se cambia al modo fragments
+  private initKetcherWhenModeChanges() {
+    // Usar setTimeout para asegurar que el DOM se haya actualizado
+    setTimeout(() => {
+      this.setupKetcherIfAvailable();
+    }, 100);
+  }
+
+  async getSmiles() {
+    // Verificar que el iframe existe antes de intentar acceder
+    if (!this.ketcherFrame || !this.ketcherFrame.nativeElement) {
+      console.error(
+        'Ketcher iframe is not available. Make sure you are in Draw Molecule mode.'
+      );
+      this.error =
+        'Molecular editor is not available. Please switch to Draw Molecule mode.';
+      return;
+    }
+
+    if (!this.ketcherLoaded) {
+      console.warn('Ketcher is not ready yet');
+      this.error =
+        'Molecular editor is still loading. Please wait a moment and try again.';
+      return;
+    }
+
+    // Limpiar errores previos
+    this.error = null;
+
+    try {
+      const iframeWin = this.ketcherFrame.nativeElement.contentWindow;
+      if (!iframeWin) {
+        console.error('Cannot access iframe content window');
+        this.error = 'Cannot access molecular editor. Please refresh the page.';
+        return;
+      }
+
+      // Usar la API específica de Ketcher para obtener SMILES
+      const ketcher = (iframeWin as any).ketcher;
+      if (!ketcher) {
+        console.error('Ketcher API not available');
+        this.error =
+          'Molecular editor API is not available. Trying alternative method...';
+        // Método alternativo usando postMessage (fallback)
+        this.getSmilesViaPostMessage();
+        return;
+      }
+
+      // Obtener la molécula como SMILES
+      const smilesResult = await ketcher.getSmiles();
+
+      if (!smilesResult || smilesResult.trim() === '') {
+        this.error = 'No molecule drawn. Please draw a molecule first.';
+        return;
+      }
+
+      // Validar que el SMILES contenga solo una molécula
+      if (!this.isValidSingleMolecule(smilesResult)) {
+        return; // El error se establece en la función de validación
+      }
+
+      this.smiles = smilesResult;
+      console.log('SMILES obtenido de Ketcher:', this.smiles);
+
+      // Opcional: También puedes actualizar el campo smilesInput para usar en el análisis
+      this.smilesInput = this.smiles;
+    } catch (error) {
+      console.error('Error obteniendo SMILES de Ketcher:', error);
+      this.error =
+        'Error getting SMILES from molecular editor. Trying alternative method...';
+
+      // Método alternativo usando postMessage (fallback)
+      this.getSmilesViaPostMessage();
+    }
+  }
+
+  private getSmilesViaPostMessage() {
+    // Verificar que el iframe existe antes de intentar acceder
+    if (!this.ketcherFrame || !this.ketcherFrame.nativeElement) {
+      console.error('Ketcher iframe is not available for postMessage fallback');
+      return;
+    }
+
+    const iframeWin = this.ketcherFrame.nativeElement.contentWindow;
+    if (iframeWin) {
+      // Usar el protocolo de mensajes de Ketcher
+      const messageId = Math.random().toString(36).substr(2, 9);
+
+      // Crear el listener para la respuesta
+      const messageHandler = (event: MessageEvent) => {
+        if (event.data && event.data.id === messageId) {
+          if (event.data.type === 'result') {
+            const receivedSmiles = event.data.payload;
+
+            // Validar que el SMILES contenga solo una molécula
+            if (!this.isValidSingleMolecule(receivedSmiles)) {
+              return; // El error se establece en la función de validación
+            }
+
+            this.smiles = receivedSmiles;
+            this.smilesInput = this.smiles;
+            console.log('SMILES recibido via postMessage:', this.smiles);
+          } else if (event.data.type === 'error') {
+            console.error('Error obteniendo SMILES:', event.data.payload);
+            this.error =
+              'Error getting SMILES from molecular editor: ' +
+              event.data.payload;
+          }
+          // Remover el listener después de recibir la respuesta
+          window.removeEventListener('message', messageHandler);
+        }
+      };
+
+      // Agregar el listener
+      window.addEventListener('message', messageHandler);
+
+      // Enviar el mensaje para obtener SMILES
+      iframeWin.postMessage(
+        {
+          id: messageId,
+          type: 'request',
+          method: 'getSmiles',
+          params: {},
+        },
+        '*'
+      );
+    }
+  }
+
+  // Método para analizar la molécula dibujada en Ketcher
+  analyzeMoleculeFromDrawing() {
+    if (!this.smiles.trim()) {
+      this.error = 'Please draw a molecule and get SMILES first';
+      return;
+    }
+
+    // Validar que el SMILES contenga solo una molécula (validación adicional por si acaso)
+    if (!this.isValidSingleMolecule(this.smiles.trim())) {
+      return; // El error se establece en la función de validación
+    }
+
+    // Usar el SMILES obtenido de Ketcher para el análisis
+    this.smilesInput = this.smiles;
+    this.getMoleculeData();
+  }
+
+  // Método para copiar SMILES al portapapeles
+  async copySmilesToClipboard() {
+    if (!this.smiles) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(this.smiles);
+      console.log('SMILES copied to clipboard');
+      // Opcional: mostrar una notificación o mensaje de éxito
+    } catch (error) {
+      console.error('Failed to copy SMILES to clipboard:', error);
+      // Fallback para navegadores más antiguos
+      this.fallbackCopyToClipboard(this.smiles);
+    }
+  }
+
+  private fallbackCopyToClipboard(text: string) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      document.execCommand('copy');
+      console.log('SMILES copied to clipboard (fallback)');
+    } catch (error) {
+      console.error('Fallback copy failed:', error);
+    }
+
+    document.body.removeChild(textArea);
+  }
+
+  // Función para validar que el SMILES contenga solo una molécula
+  private isValidSingleMolecule(smiles: string): boolean {
+    if (!smiles || smiles.trim() === '') {
+      this.error = 'Empty SMILES string.';
+      return false;
+    }
+
+    const trimmedSmiles = smiles.trim();
+
+    // Verificar si contiene un punto (.) que indica múltiples moléculas/fragmentos
+    if (trimmedSmiles.includes('.')) {
+      const fragmentCount = trimmedSmiles.split('.').length;
+      this.error = `Error: The molecule contains ${fragmentCount} fragments or disconnected parts. Please draw a single connected molecule without fragments separated by dots (.).`;
+      console.log(
+        'SMILES validation failed: Contains multiple fragments:',
+        trimmedSmiles
+      );
+      return false;
+    }
+
+    // Verificar que no esté vacío después de trim
+    if (trimmedSmiles.length === 0) {
+      this.error = 'Invalid SMILES: Empty molecule.';
+      return false;
+    }
+
+    // Validaciones adicionales básicas de SMILES
+    // Verificar que no contenga caracteres extraños que indiquen problemas
+    const invalidChars = /[^\w\[\]()=+\-#@%\\\/:\.]/g;
+    const invalidMatches = trimmedSmiles.match(invalidChars);
+    if (invalidMatches) {
+      this.error = `Invalid SMILES: Contains invalid characters: ${invalidMatches.join(
+        ', '
+      )}`;
+      return false;
+    }
+
+    // Verificar patrones comunes de múltiples moléculas (por si hay otros separadores)
+    const multiMoleculePatterns = [
+      /\s+/g, // espacios que podrían indicar separación
+    ];
+
+    for (const pattern of multiMoleculePatterns) {
+      if (pattern.test(trimmedSmiles)) {
+        this.error =
+          'Invalid SMILES: Contains spaces or unexpected separators that may indicate multiple molecules.';
+        return false;
+      }
+    }
+
+    console.log('SMILES validation passed:', trimmedSmiles);
+    return true;
+  }
+
+  // Método para reinicializar Ketcher manualmente si es necesario
+  reloadKetcher() {
+    if (this.ketcherFrame && this.ketcherFrame.nativeElement) {
+      this.ketcherLoaded = false;
+      this.smiles = '';
+      this.error = null;
+
+      // Recargar el iframe
+      const currentSrc = this.ketcherFrame.nativeElement.src;
+      this.ketcherFrame.nativeElement.src = '';
+      setTimeout(() => {
+        this.ketcherFrame.nativeElement.src = currentSrc;
+        this.setupKetcherIfAvailable();
+      }, 100);
+    }
+  } // Method to change analysis mode
   setMode(mode: 'smiles' | 'fragments') {
     this.selectedMode = mode;
     // Clear inputs when switching modes
     this.smilesInput = '';
-    // Reset fragment inputs to default values
-    this.parentSmiles = 'C1=NC2=C(N1)N=CN2[C@H]3O[C@H](CO)[C@@H](O)[C@H]3O';
-    this.fragment1 = 'O[C@@H]1[C@H](O)[CH]O[C@@H]1n1cnc2[nH]cnc21';
-    this.fragment2 = '[CH2]O';
-    // Clear results
+    this.smiles = ''; // Limpiar SMILES al cambiar de modo
+    this.ketcherLoaded = false; // Reset Ketcher loaded state
+
     this.clearResults();
+
+    // Si se cambia al modo fragments, inicializar Ketcher
+    if (mode === 'fragments') {
+      this.initKetcherWhenModeChanges();
+    }
   }
 
   // Clear all results
@@ -211,6 +484,11 @@ export class HomeComponent {
     if (!this.smilesInput.trim()) {
       this.error = 'Please enter the molecule SMILES';
       return;
+    }
+
+    // Validar que el SMILES contenga solo una molécula
+    if (!this.isValidSingleMolecule(this.smilesInput.trim())) {
+      return; // El error se establece en la función de validación
     }
 
     this.loadingInfo = true;
@@ -539,45 +817,5 @@ export class HomeComponent {
       this.error = 'Error downloading BDE table';
       console.error('Error downloading CSV:', error);
     }
-  }
-
-  getFragmentAnalysis() {
-    if (
-      !this.parentSmiles.trim() ||
-      !this.fragment1.trim() ||
-      !this.fragment2.trim()
-    ) {
-      this.error = 'Please enter all fragment SMILES';
-      return;
-    }
-
-    this.loadingInfo = true;
-    this.error = null;
-
-    const requestInfo: ObtainBDEFragmentsRequest = {
-      smiles: this.parentSmiles.trim(),
-      fragments: {
-        Smile1: this.fragment1.trim(),
-        Smile2: this.fragment2.trim(),
-      },
-    };
-
-    this.v1Service.v1ObtainBDEFragmentsCreate(requestInfo).subscribe({
-      next: (response: any) => {
-        if (!response) {
-          this.error = 'No data received from the server';
-          this.loadingInfo = false;
-          return;
-        }
-        this.bdeFragmentResults = response.data;
-        this.loadingInfo = false;
-      },
-      error: (error: any) => {
-        this.error =
-          'Error getting molecular information: ' +
-          (error.message || 'Unknown error');
-        this.loadingInfo = false;
-      },
-    });
   }
 }

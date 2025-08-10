@@ -665,22 +665,49 @@
 
 /* Error Section */
 .error-section {
-  background: #fff;
+  background: #fff5f5;
   border: 2px solid #e74c3c;
   border-radius: 15px;
   padding: 2rem;
   margin: 2rem 0;
-  color: #e74c3c;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
 }
 
 .error-section h3 {
   margin-top: 0;
   font-size: 1.5rem;
+  color: #c53030;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.error-section p {
-  margin-bottom: 0;
+.error-message {
+  margin-top: 1rem;
+}
+
+.error-message p {
+  margin-bottom: 1rem;
   font-size: 1.1rem;
+  color: #e74c3c;
+  line-height: 1.5;
+}
+
+.error-help {
+  background: #fed7d7;
+  border: 1px solid #feb2b2;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+
+  strong {
+    color: #c53030;
+    font-weight: 600;
+  }
+
+  color: #742a2a;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 /* Bond Selection Section */
@@ -1976,5 +2003,192 @@
 
   .value.bde-value {
     text-align: center;
+  }
+}
+
+/* Estilos para la sección de dibujo */
+.draw-section {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+
+  h3 {
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .draw-help {
+    color: #718096;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .draw-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+
+    small {
+      color: #856404;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+
+  iframe {
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+  }
+}
+
+.draw-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.btn-secondary {
+  padding: 0.8rem 1.5rem;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    background: #cbd5e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.smiles-display {
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+
+  h4 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+}
+
+.smiles-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  padding: 1rem;
+  gap: 1rem;
+
+  code {
+    flex: 1;
+    font-family: "Courier New", monospace;
+    font-size: 0.95rem;
+    color: #2d3748;
+    background: none;
+    word-break: break-all;
+    line-height: 1.4;
+  }
+}
+
+.btn-copy {
+  padding: 0.5rem 0.8rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: #5a67d8;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.ketcher-loading-info {
+  text-align: center;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  margin-top: 1rem;
+
+  p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.95rem;
+  }
+}
+
+/* Responsive para dispositivos móviles */
+@media (max-width: 768px) {
+  .draw-section {
+    padding: 1rem;
+
+    iframe {
+      height: 500px;
+    }
+  }
+
+  .draw-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .smiles-box {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+
+    code {
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .btn-copy {
+      align-self: center;
+      width: auto;
+    }
   }
 }
