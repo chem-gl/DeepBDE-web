@@ -18,6 +18,108 @@ import {
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
+  // Controles independientes para imagen principal
+  zoomMain = 1.7;
+  panXMain = 0;
+  panYMain = 0;
+  isPanningMain = false;
+  lastPanXMain = 0;
+  lastPanYMain = 0;
+  isFullscreenMain = false;
+
+  // Controles independientes para imagen BDE Result
+  zoomBde = 1.7;
+  panXBde = 0;
+  panYBde = 0;
+  isPanningBde = false;
+  lastPanXBde = 0;
+  lastPanYBde = 0;
+  isFullscreenBde = false;
+  // Métodos para imagen principal
+  zoomInMain() {
+    this.zoomMain = Math.min(this.zoomMain * 1.2, 15);
+  }
+  zoomOutMain() {
+    this.zoomMain = Math.max(this.zoomMain / 1.2, 0.1);
+  }
+  resetZoomMain() {
+    this.zoomMain = 1;
+    this.panXMain = 0;
+    this.panYMain = 0;
+  }
+  toggleFullscreenMain() {
+    this.isFullscreenMain = !this.isFullscreenMain;
+    if (!this.isFullscreenMain) this.resetZoomMain();
+  }
+  getTransformMain(): string {
+    return `scale(${this.zoomMain}) translate(${this.panXMain}px, ${this.panYMain}px)`;
+  }
+  startPanMain(event: MouseEvent) {
+    this.isPanningMain = true;
+    this.lastPanXMain = event.clientX;
+    this.lastPanYMain = event.clientY;
+    event.preventDefault();
+  }
+  onPanMain(event: MouseEvent) {
+    if (!this.isPanningMain) return;
+    const deltaX = event.clientX - this.lastPanXMain;
+    const deltaY = event.clientY - this.lastPanYMain;
+    this.panXMain += deltaX / this.zoomMain;
+    this.panYMain += deltaY / this.zoomMain;
+    this.lastPanXMain = event.clientX;
+    this.lastPanYMain = event.clientY;
+  }
+  endPanMain() {
+    this.isPanningMain = false;
+  }
+  onWheelMain(event: WheelEvent) {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? 0.9 : 1.1;
+    this.zoomMain = Math.max(0.1, Math.min(15, this.zoomMain * delta));
+  }
+
+  // Métodos para imagen BDE Result
+  zoomInBde() {
+    this.zoomBde = Math.min(this.zoomBde * 1.2, 15);
+  }
+  zoomOutBde() {
+    this.zoomBde = Math.max(this.zoomBde / 1.2, 0.1);
+  }
+  resetZoomBde() {
+    this.zoomBde = 1;
+    this.panXBde = 0;
+    this.panYBde = 0;
+  }
+  toggleFullscreenBde() {
+    this.isFullscreenBde = !this.isFullscreenBde;
+    if (!this.isFullscreenBde) this.resetZoomBde();
+  }
+  getTransformBde(): string {
+    return `scale(${this.zoomBde}) translate(${this.panXBde}px, ${this.panYBde}px)`;
+  }
+  startPanBde(event: MouseEvent) {
+    this.isPanningBde = true;
+    this.lastPanXBde = event.clientX;
+    this.lastPanYBde = event.clientY;
+    event.preventDefault();
+  }
+  onPanBde(event: MouseEvent) {
+    if (!this.isPanningBde) return;
+    const deltaX = event.clientX - this.lastPanXBde;
+    const deltaY = event.clientY - this.lastPanYBde;
+    this.panXBde += deltaX / this.zoomBde;
+    this.panYBde += deltaY / this.zoomBde;
+    this.lastPanXBde = event.clientX;
+    this.lastPanYBde = event.clientY;
+  }
+  endPanBde() {
+    this.isPanningBde = false;
+  }
+  onWheelBde(event: WheelEvent) {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? 0.9 : 1.1;
+    this.zoomBde = Math.max(0.1, Math.min(15, this.zoomBde * delta));
+  }
   // SVG sanitizado para bdeResults.image_svg
   bdeResultsSanitizedSvg: SafeHtml | null = null;
   // Component properties for mode selection
@@ -577,14 +679,20 @@ export class HomeComponent {
     cleanSvg = cleanSvg.replace(/xmlns:rdkit=/g, ' xmlns:rdkit=');
     cleanSvg = cleanSvg.replace(/xmlns:xlink=/g, ' xmlns:xlink=');
     cleanSvg = cleanSvg.replace(/xml:space=/g, ' xml:space=');
-    cleanSvg = cleanSvg.replace(/width=/g, ' width=');
-    cleanSvg = cleanSvg.replace(/height=/g, ' height=');
+
+    // Forzar ancho y alto del SVG
+    cleanSvg = cleanSvg.replace(/width="[^"]*"/, 'width="100%"');
+    cleanSvg = cleanSvg.replace(/height="[^"]*"/, 'height="auto"');
+    // Si no existen, agrégalos al tag <svg>
+    if (!/width="[^"]*"/.test(cleanSvg)) {
+      cleanSvg = cleanSvg.replace('<svg', '<svg width="100%"');
+    }
+    if (!/height="[^"]*"/.test(cleanSvg)) {
+      cleanSvg = cleanSvg.replace('<svg', '<svg height="auto"');
+    }
+
     cleanSvg = cleanSvg.replace(/viewBox=/g, ' viewBox=');
-
-    // Clean multiple spaces
     cleanSvg = cleanSvg.replace(/\s+/g, ' ');
-
-    // Format first line correctly
     cleanSvg = cleanSvg.replace(
       /^<\?xml[^>]+\?><svg/,
       "<?xml version='1.0' encoding='UTF-8'?>\n<svg"

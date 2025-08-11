@@ -127,28 +127,30 @@
     </div>
     <div class="image-container">
       <div class="image-controls">
-        <button (click)="zoomIn()" class="control-btn" title="Zoom In">
+        <button (click)="zoomInMain()" class="control-btn" title="Zoom In">
           🔍+
         </button>
-        <button (click)="zoomOut()" class="control-btn" title="Zoom Out">
+        <button (click)="zoomOutMain()" class="control-btn" title="Zoom Out">
           🔍-
         </button>
-        <button (click)="resetZoom()" class="control-btn" title="Original Size">
+        <button (click)="resetZoomMain()" class="control-btn" title="Original Size">
           ↻
         </button>
-        <button (click)="toggleFullscreen()" class="control-btn" title="Fullscreen">
+        <button (click)="toggleFullscreenMain()" class="control-btn" title="Fullscreen">
           ⛶
         </button>
       </div>
-      <div class="svg-display" [class.fullscreen]="isFullscreen" #svgContainer (mousedown)="startPan($event)"
-        (mousemove)="onPan($event)" (mouseup)="endPan()" (mouseleave)="endPan()" (wheel)="onWheel($event)">
+      <div class="svg-display" [class.fullscreen]="isFullscreenMain" #svgContainerMain
+        (mousedown)="startPanMain($event)" (mousemove)="onPanMain($event)" (mouseup)="endPanMain()"
+        (mouseleave)="endPanMain()" (wheel)="onWheelMain($event)">
         <!-- Close fullscreen button -->
-        @if(isFullscreen) {
-        <button (click)="toggleFullscreen()" class="close-fullscreen-btn" title="Close fullscreen">
+        @if(isFullscreenMain) {
+        <button (click)="toggleFullscreenMain()" class="close-fullscreen-btn" title="Close fullscreen">
           ✕
         </button>
         }
-        <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransform()">
+
+        <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransformMain()">
         </div>
       </div>
     </div>
@@ -271,8 +273,31 @@
         </button>
       </div>
       <div class="image-container">
-        <div class="svg-display">
-          <div class="svg-content" [innerHTML]="bdeResultsSanitizedSvg"></div>
+        <div class="image-controls">
+          <button (click)="zoomInBde()" class="control-btn" title="Zoom In">
+            🔍+
+          </button>
+          <button (click)="zoomOutBde()" class="control-btn" title="Zoom Out">
+            🔍-
+          </button>
+          <button (click)="resetZoomBde()" class="control-btn" title="Original Size">
+            ↻
+          </button>
+          <button (click)="toggleFullscreenBde()" class="control-btn" title="Fullscreen">
+            ⛶
+          </button>
+        </div>
+        <div class="svg-display" [class.fullscreen]="isFullscreenBde" #svgContainerBde (mousedown)="startPanBde($event)"
+          (mousemove)="onPanBde($event)" (mouseup)="endPanBde()" (mouseleave)="endPanBde()"
+          (wheel)="onWheelBde($event)">
+          <!-- Close fullscreen button -->
+          @if(isFullscreenBde) {
+          <button (click)="toggleFullscreenBde()" class="close-fullscreen-btn" title="Close fullscreen">
+            ✕
+          </button>
+          }
+          <div class="svg-content" [innerHTML]="bdeResultsSanitizedSvg" [style.transform]="getTransformBde()">
+          </div>
         </div>
       </div>
     </div>
