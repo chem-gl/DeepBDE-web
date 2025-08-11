@@ -140,6 +140,16 @@
           ⛶
         </button>
       </div>
+      <div class="draw-warning help-text">
+        <small>
+          <span
+            style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#222; margin-right:6px; vertical-align:middle;"></span>
+          Atoms
+          <span
+            style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#1976d2; margin:0 6px; vertical-align:middle;"></span>
+          Bonds
+        </small>
+      </div>
       <div class="svg-display" [class.fullscreen]="isFullscreenMain" #svgContainerMain
         (mousedown)="startPanMain($event)" (mousemove)="onPanMain($event)" (mouseup)="endPanMain()"
         (mouseleave)="endPanMain()" (wheel)="onWheelMain($event)">
@@ -181,7 +191,7 @@
 
     <!-- Result Format Section -->
 
-    <h3 class="title-format">Additional printable formats</h3>
+    <h3 class="title-format">Optionally, you can export the bond dissociation fragments in the following formats</h3>
     <div class="format-checkboxes" style="justify-content: center;">
       <div class="format-checkbox-group">
         <label class="format-checkbox-label">
@@ -287,6 +297,16 @@
             ⛶
           </button>
         </div>
+        <div class="draw-warning help-text">
+          <small>
+            <span
+              style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#222; margin-right:6px; vertical-align:middle;"></span>
+            Atoms
+            <span
+              style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#1976d2; margin:0 6px; vertical-align:middle;"></span>
+            BDE value
+          </small>
+        </div>
         <div class="svg-display" [class.fullscreen]="isFullscreenBde" #svgContainerBde (mousedown)="startPanBde($event)"
           (mousemove)="onPanBde($event)" (mouseup)="endPanBde()" (mouseleave)="endPanBde()"
           (wheel)="onWheelBde($event)">
@@ -296,6 +316,7 @@
             ✕
           </button>
           }
+
           <div class="svg-content" [innerHTML]="bdeResultsSanitizedSvg" [style.transform]="getTransformBde()">
           </div>
         </div>
