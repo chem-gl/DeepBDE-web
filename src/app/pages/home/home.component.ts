@@ -3,6 +3,7 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
+import { RDKitModule } from '@rdkit/rdkit';
 import {
   BDEEvaluateRequest,
   FragmentResponseData,
@@ -10,13 +11,6 @@ import {
   MoleculeInfoResponseData,
   V1Service,
 } from '../../../../angular-client';
-
-declare global {
-  interface Window {
-    initRDKitModule?: any;
-    RDKit?: any;
-  }
-}
 
 @Component({
   selector: 'app-home',
@@ -76,7 +70,7 @@ export class HomeComponent {
   public smiles = '';
   public ketcherLoaded = false;
 
-  private RDKit: any = null;
+  private RDKit?: RDKitModule;
   public rdkitReady = false;
   constructor(
     private readonly v1Service: V1Service,
@@ -88,8 +82,10 @@ export class HomeComponent {
         event.key === 'Escape' &&
         (this.isFullscreenMain || this.isFullscreenBde)
       ) {
-        this.toggleFullscreenMain();
-        this.toggleFullscreenBde();
+        this.resetZoomMain();
+        this.resetZoomBde();
+        this.isFullscreenMain = false;
+        this.isFullscreenBde = false;
       }
     });
   }
@@ -102,7 +98,7 @@ export class HomeComponent {
         this.RDKit = await (window as any).initRDKitModule({
           locateFile: (file: string) => `/assets/rdkit/${file}`,
         });
-        (window as any).RDKit = this.RDKit; // opcional: exponer globalmente
+        (window as any).RDKit = this.RDKit;
         this.rdkitReady = true;
         console.log('RDKit cargado, versión:', this.RDKit?.version?.());
       } else {
@@ -451,7 +447,7 @@ export class HomeComponent {
     if (this.RDKit) {
       try {
         const mol = this.RDKit.get_mol(trimmedSmiles);
-        if (!mol.is_valid()) {
+        if (!mol?.is_valid()) {
           this.error = 'Invalid SMILES: The SMILES string is not valid.';
           return false;
         }
@@ -653,6 +649,8 @@ export class HomeComponent {
     if (!this.smilesInput.trim()) {
       return;
     }
+    //quito todos los contenidos
+    this.clearResults();
 
     // Guardar en historial si no existe
     const value = this.smilesInput.trim();
