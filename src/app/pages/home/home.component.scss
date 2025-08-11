@@ -335,7 +335,9 @@
   color: $text-primary;
 }
 .btn-copy {
-  @include button-secondary;
+  //justifico a la derecha
+  margin-left: auto;
+  cursor: pointer;
 }
 .ketcher-loading-info {
   color: $text-secondary;
