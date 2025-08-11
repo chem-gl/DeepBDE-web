@@ -1,4 +1,10 @@
 .main-content {
   min-height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  position: relative;
+  z-index: 1;
+}
+
+app-navbar {
+  position: relative;
+  z-index: 2;
 }
