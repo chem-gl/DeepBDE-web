@@ -258,6 +258,25 @@
     </div>
 
     <!-- Export Buttons -->
+    <!-- SVG molecular structure from BDE results -->
+    @if(bdeResults.image_svg) {
+    <div class="results-section">
+      <h2 class="molecular-title">Molecular Structure (BDE Result)</h2>
+      <div class="image-actions">
+        <button (click)="downloadSVGFile(true)" class="btn-download">
+          🖼️ Download SVG
+        </button>
+        <button (click)="downloadPNGFile(true)" class="btn-download" style="margin-left: 0.5rem;">
+          📷 Download PNG
+        </button>
+      </div>
+      <div class="image-container">
+        <div class="svg-display">
+          <div class="svg-content" [innerHTML]="bdeResultsSanitizedSvg"></div>
+        </div>
+      </div>
+    </div>
+    }
     <div class="export-actions">
       <h3>Export Data</h3>
       <div class="export-buttons">

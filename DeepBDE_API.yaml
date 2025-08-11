@@ -158,6 +158,10 @@ paths:
                       bonds_predicted: []
                       smiles_list: null
                       xyz_block: null
+                      image_svg: <svg>...</svg>
+                      canvas:
+                        width: 300
+                        height: 300
                     error: null
                   summary: Ejemplo exitoso
           description: Respuesta exitosa / Successful response
@@ -172,85 +176,6 @@ paths:
                     status: error
                     detail: Formato no soportado
                   summary: Error por formato inválido
-          description: Error de validación / Validation error
-  /api/v1/ObtainBDEFragments/:
-    post:
-      operationId: v1_ObtainBDEFragments_create
-      description: "\n        Obtiene la energía de disociación de enlaces para una\
-        \ molécula basada en SMILES y los fragmentos proporcionados.\n        Obtains\
-        \ the dissociation energy of bonds for a molecule based on SMILES and provided\
-        \ fragments.\n        "
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ObtainBDEFragmentsRequest'
-            examples:
-              EntradaDeEjemplo/ExampleInput:
-                value:
-                  smiles: CCO
-                  fragments:
-                    Smile1: C
-                    Smile2: O
-                summary: Entrada de ejemplo / Example input
-              EntradaAlternativa/AlternativeInput:
-                value:
-                  smiles: C1=CC=CC=C1
-                  fragments:
-                    Smile1: C
-                    Smile2: C
-                summary: Entrada alternativa / Alternative input
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ObtainBDEFragmentsRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ObtainBDEFragmentsRequest'
-        required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ObtainBDEFragmentsResponseData'
-              examples:
-                EjemploExitoso:
-                  value:
-                    status: success
-                    data:
-                      smiles_canonical: CCO
-                      molecule_id: a1b2c3d4e5f6a7b8
-                      bonds_predicted:
-                        idx: 1
-                        bde: 95.0
-                        begin_atom_idx: 0
-                        end_atom_idx: 1
-                        bond_atoms: C-O
-                        bond_type: single
-                        is_fragmentable: true
-                      fragments:
-                        Smile1: C
-                        Smile2: O
-                    error: null
-                  summary: Ejemplo exitoso
-          description: Respuesta exitosa / Successful response
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse_NoneType'
-              examples:
-                ErrorPorSMILESInválido:
-                  value:
-                    status: error
-                    detail: Formato SMILES inválido
-                  summary: Error por SMILES inválido
           description: Error de validación / Validation error
   /api/v1/download_report/:
     post:
@@ -1130,6 +1055,8 @@ components:
         - bonds_predicted: Lista de enlaces predichos
         - smiles_list: Lista de SMILES de los fragmentos (opcional)
         - xyz_block: Bloque XYZ de los fragmentos (opcional)
+        - image_svg: Imagen SVG con valores BDE
+        - canvas: Información del lienzo
       properties:
         smiles_canonical:
           title: Smiles Canonical
@@ -1156,25 +1083,21 @@ components:
           - type: 'null'
           default: null
           title: Xyz Block
+        image_svg:
+          title: Image Svg
+          type: string
+        canvas:
+          additionalProperties:
+            type: integer
+          title: Canvas
+          type: object
       required:
       - smiles_canonical
       - molecule_id
       - bonds_predicted
+      - image_svg
+      - canvas
       title: FragmentResponseData
-      type: object
-    Fragments:
-      description: Fragmentos de la molécula.
-      properties:
-        Smile1:
-          title: Smile1
-          type: string
-        Smile2:
-          title: Smile2
-          type: string
-      required:
-      - Smile1
-      - Smile2
-      title: Fragments
       type: object
     InferAllRequest:
       description: |-
@@ -1276,47 +1199,6 @@ components:
       required:
       - smiles
       title: MoleculeSmileCanonicalRequest
-      type: object
-    ObtainBDEFragmentsRequest:
-      description: |-
-        Entrada para /ObtainBDEFragments/.
-        - smiles: SMILES de la molécula
-        - fragments: Fragmentos de la molécula
-      properties:
-        smiles:
-          title: Smiles
-          type: string
-        fragments:
-          $ref: '#/components/schemas/Fragments'
-      required:
-      - smiles
-      - fragments
-      title: ObtainBDEFragmentsRequest
-      type: object
-    ObtainBDEFragmentsResponseData:
-      description: |-
-        Salida de /ObtainBDEFragments/.
-        - smiles_canonical: SMILES canónico de la molécula original
-        - molecule_id: ID de la molécula
-        - bonds_predicted: Lista de enlaces predichos
-        - fragments: Fragmentos de la molécula
-      properties:
-        smiles_canonical:
-          title: Smiles Canonical
-          type: string
-        molecule_id:
-          title: Molecule Id
-          type: string
-        bonds_predicted:
-          $ref: '#/components/schemas/PredictedBond'
-        fragments:
-          $ref: '#/components/schemas/Fragments'
-      required:
-      - smiles_canonical
-      - molecule_id
-      - bonds_predicted
-      - fragments
-      title: ObtainBDEFragmentsResponseData
       type: object
     PredictCheckRequest:
       description: |-

@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.base.service.ts
 api.module.ts
@@ -27,15 +26,12 @@ model/downloadReportResponseData.ts
 model/errorCode.ts
 model/errorDetail.ts
 model/fragmentResponseData.ts
-model/fragments.ts
 model/inferAllRequest.ts
 model/inferAllResponseData.ts
 model/models.ts
 model/moleculeInfoRequest.ts
 model/moleculeInfoResponseData.ts
 model/moleculeSmileCanonicalRequest.ts
-model/obtainBDEFragmentsRequest.ts
-model/obtainBDEFragmentsResponseData.ts
 model/predictCheckRequest.ts
 model/predictCheckResponseData.ts
 model/predictMultipleRequest.ts

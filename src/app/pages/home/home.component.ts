@@ -8,7 +8,6 @@ import {
   FragmentResponseData,
   MoleculeInfoRequest,
   MoleculeInfoResponseData,
-  ObtainBDEFragmentsResponseData,
   V1Service,
 } from '../../../../angular-client';
 @Component({
@@ -19,6 +18,8 @@ import {
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
+  // SVG sanitizado para bdeResults.image_svg
+  bdeResultsSanitizedSvg: SafeHtml | null = null;
   // Component properties for mode selection
   selectedMode: 'smiles' | 'fragments' = 'smiles';
   smilesInput = '';
@@ -46,7 +47,6 @@ export class HomeComponent {
   includeXyzFormat = false;
   includeSmilesFormat = false;
   moleculeInfo?: MoleculeInfoResponseData;
-  bdeFragmentResults?: ObtainBDEFragmentsResponseData;
   // Properties for BDE results
   bdeResults?: FragmentResponseData;
   loadingBDE = false;
@@ -424,6 +424,37 @@ export class HomeComponent {
           this.bdeResults = response.data;
           console.log('BDE Results:', this.bdeResults);
           this.error = null;
+          // Sanitizar el SVG de bdeResults.image_svg si existe
+          if (this.bdeResults.image_svg) {
+            let cleanSvg = this.bdeResults.image_svg.trim();
+            cleanSvg = cleanSvg.replace(
+              /encoding='iso-8859-1'/g,
+              "encoding='UTF-8'"
+            );
+            cleanSvg = cleanSvg.replace(/xmlns=/g, ' xmlns=');
+            cleanSvg = cleanSvg.replace(/xmlns:rdkit=/g, ' xmlns:rdkit=');
+            cleanSvg = cleanSvg.replace(/xmlns:xlink=/g, ' xmlns:xlink=');
+            cleanSvg = cleanSvg.replace(/xml:space=/g, ' xml:space=');
+            cleanSvg = cleanSvg.replace(/width="[^"]*"/, 'width="100%"');
+            cleanSvg = cleanSvg.replace(/height="[^"]*"/, 'height="auto"');
+            // Si no existen, agrégalos al tag <svg>
+            if (!/width="[^"]*"/.test(cleanSvg)) {
+              cleanSvg = cleanSvg.replace('<svg', '<svg width="100%"');
+            }
+            if (!/height="[^"]*"/.test(cleanSvg)) {
+              cleanSvg = cleanSvg.replace('<svg', '<svg height="auto"');
+            }
+            cleanSvg = cleanSvg.replace(/viewBox=/g, ' viewBox=');
+            cleanSvg = cleanSvg.replace(/\s+/g, ' ');
+            cleanSvg = cleanSvg.replace(
+              /^<\?xml[^>]+\?><svg/,
+              "<?xml version='1.0' encoding='UTF-8'?>\n<svg"
+            );
+            this.bdeResultsSanitizedSvg =
+              this.sanitizer.bypassSecurityTrustHtml(cleanSvg);
+          } else {
+            this.bdeResultsSanitizedSvg = null;
+          }
         } else {
           this.error = 'No BDE data found in the response';
         }
@@ -620,23 +651,29 @@ export class HomeComponent {
     const delta = event.deltaY > 0 ? 0.9 : 1.1;
     this.zoom = Math.max(0.1, Math.min(15, this.zoom * delta));
   }
-  downloadSVGFile() {
-    if (!this.svgImage) {
-      this.error = 'No SVG image available for download';
-      return;
-    }
-
-    try {
-      const blob = new Blob([this.svgImage], { type: 'image/svg+xml' });
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `molecular_structure_${this.smilesInput.replace(
+  downloadSVGFile(useBdeResults?: boolean) {
+    let svgToDownload = this.svgImage;
+    let filename = `molecular_structure_${this.smilesInput.replace(
+      /[^a-zA-Z0-9]/g,
+      '_'
+    )}.svg`;
+    if (useBdeResults && this.bdeResults?.image_svg) {
+      svgToDownload = this.bdeResults.image_svg;
+      filename = `bde_result_structure_${this.smilesInput.replace(
         /[^a-zA-Z0-9]/g,
         '_'
       )}.svg`;
-
+    }
+    if (!svgToDownload) {
+      this.error = 'No SVG image available for download';
+      return;
+    }
+    try {
+      const blob = new Blob([svgToDownload], { type: 'image/svg+xml' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -647,12 +684,23 @@ export class HomeComponent {
     }
   }
 
-  downloadPNGFile() {
-    if (!this.svgImage) {
+  downloadPNGFile(useBdeResults?: boolean) {
+    let svgToDownload = this.svgImage;
+    let filename = `molecular_structure_${this.smilesInput.replace(
+      /[^a-zA-Z0-9]/g,
+      '_'
+    )}.png`;
+    if (useBdeResults && this.bdeResults?.image_svg) {
+      svgToDownload = this.bdeResults.image_svg;
+      filename = `bde_result_structure_${this.smilesInput.replace(
+        /[^a-zA-Z0-9]/g,
+        '_'
+      )}.png`;
+    }
+    if (!svgToDownload) {
       this.error = 'No SVG image available for download';
       return;
     }
-
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -660,41 +708,31 @@ export class HomeComponent {
         this.error = 'Error creating canvas context';
         return;
       }
-
       const img = new Image();
-      const svgBlob = new Blob([this.svgImage], {
+      const svgBlob = new Blob([svgToDownload], {
         type: 'image/svg+xml;charset=utf-8',
       });
       const url = URL.createObjectURL(svgBlob);
-
       img.onload = () => {
         const scale = 2;
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
-
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.scale(scale, scale);
-
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, img.width, img.height);
         ctx.drawImage(img, 0, 0);
-
         canvas.toBlob(
           (blob) => {
             if (blob) {
               const pngUrl = URL.createObjectURL(blob);
               const link = document.createElement('a');
               link.href = pngUrl;
-              link.download = `molecular_structure_${this.smilesInput.replace(
-                /[^a-zA-Z0-9]/g,
-                '_'
-              )}.png`;
-
+              link.download = filename;
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
-
               URL.revokeObjectURL(pngUrl);
               URL.revokeObjectURL(url);
             } else {
@@ -705,12 +743,10 @@ export class HomeComponent {
           0.95
         );
       };
-
       img.onerror = () => {
         this.error = 'Error loading SVG for conversion';
         URL.revokeObjectURL(url);
       };
-
       img.src = url;
     } catch (error) {
       this.error = 'Error converting SVG to PNG';
