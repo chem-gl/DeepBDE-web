@@ -33,8 +33,17 @@
     <div class="input-section smiles-section">
       <div class="input-group">
         <label for="smiles-input">Enter SMILES Notation:</label>
-        <input id="smiles-input" type="text" [(ngModel)]="smilesInput" placeholder="e.g., CCOc1cccc(O)c1"
-          class="smiles-input" />
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <input id="smiles-input" type="text" [(ngModel)]="smilesInput" placeholder="e.g., CCOc1cccc(O)c1"
+            class="smiles-input" list="smiles-history-list" />
+          <ng-container *ngIf="smilesHistory.length > 0">
+            <button type="button" title="Clear all" class="btn-secondary" style="font-size:0.8em; padding:0.2em 0.6em;"
+              (click)="smilesHistory=[]; saveSmilesHistory();">🗑️</button>
+          </ng-container>
+        </div>
+        <datalist id="smiles-history-list">
+          <option *ngFor="let item of smilesHistory" [value]="item"></option>
+        </datalist>
         <small class="help-text">
           Enter a valid SMILES string for a single molecule (no dots "." allowed for fragments)
         </small>

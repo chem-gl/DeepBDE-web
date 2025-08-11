@@ -25,7 +25,7 @@
   width: 100vw;
   height: 100vh;
   background: white;
-  z-index: 9999;
+  z-index: 990;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -37,7 +37,7 @@
 
 .close-fullscreen-btn {
   position: absolute;
-  top: 20px;
+  top: 100px;
   right: 30px;
   z-index: 10000;
   font-size: 2rem;
@@ -115,17 +115,33 @@
 .mode-selector {
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 0;
   margin-bottom: 2rem;
 }
 
 .mode-btn {
   @include button-secondary;
-  &.active {
-    border-color: $primary-blue;
-    background: $button-gradient;
-    color: $text-white;
-  }
+  border-radius: 0;
+  margin: 0;
+  border-right: 1px solid $border-blue;
+}
+
+.mode-btn:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.mode-btn:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-right: none;
+}
+
+.mode-btn.active {
+  border-color: $primary-blue;
+  background: $button-gradient;
+  color: $text-white;
+  z-index: 1;
 }
 
 .smiles-input,

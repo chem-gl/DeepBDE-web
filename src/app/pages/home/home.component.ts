@@ -68,6 +68,22 @@ export class HomeComponent {
   smiles = '';
   ketcherLoaded = false;
 
+  // Historial de SMILES
+  smilesHistory: string[] = [];
+
+  ngOnInit() {
+    const saved = localStorage.getItem('smilesHistory');
+    if (saved) {
+      try {
+        this.smilesHistory = JSON.parse(saved);
+      } catch {}
+    }
+  }
+
+  saveSmilesHistory() {
+    localStorage.setItem('smilesHistory', JSON.stringify(this.smilesHistory));
+  }
+
   ngAfterViewInit() {
     // Solo configurar el iframe si está presente en el DOM
     this.setupKetcherIfAvailable();
@@ -460,8 +476,15 @@ export class HomeComponent {
   // Analyze molecule method
   getMoleculeData() {
     if (!this.smilesInput.trim()) {
-      this.error = 'Please enter the molecule SMILES';
       return;
+    }
+
+    // Guardar en historial si no existe
+    const value = this.smilesInput.trim();
+    if (value && !this.smilesHistory.includes(value)) {
+      this.smilesHistory.unshift(value);
+      if (this.smilesHistory.length > 10) this.smilesHistory.pop();
+      this.saveSmilesHistory();
     }
 
     // Validar que el SMILES contenga solo una molécula
@@ -795,5 +818,16 @@ export class HomeComponent {
       this.error = 'Error downloading BDE table';
       console.error('Error downloading CSV:', error);
     }
+  }
+
+  // Seleccionar SMILES del historial
+  selectHistorySmiles(smiles: string) {
+    this.smilesInput = smiles;
+  }
+
+  // Método para eliminar moléculas del historial
+  removeSmilesHistory(item: string) {
+    this.smilesHistory = this.smilesHistory.filter((s) => s !== item);
+    this.saveSmilesHistory();
   }
 }

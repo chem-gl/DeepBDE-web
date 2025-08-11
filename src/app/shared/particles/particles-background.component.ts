@@ -26,7 +26,7 @@ export class ParticlesBackgroundComponent implements OnInit {
       },
       modes: {
         push: { quantity: 4 },
-        repulse: { distance: 120, duration: 0.4 },
+        repulse: { distance: 100, duration: 0.4 },
       },
     },
     particles: {
