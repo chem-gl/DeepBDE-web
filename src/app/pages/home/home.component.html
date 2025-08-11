@@ -35,11 +35,11 @@
         <label for="smiles-input">Enter SMILES Notation:</label>
         <input id="smiles-input" type="text" [(ngModel)]="smilesInput" placeholder="e.g., CCOc1cccc(O)c1"
           class="smiles-input" />
-        <small class="input-help">
+        <small class="help-text">
           Enter a valid SMILES string for a single molecule (no dots "." allowed for fragments)
         </small>
       </div>
-      <div class="action-buttons">
+      <div class="action-buttons" style="display: flex; justify-content: center;">
         <button class="btn-primary" (click)="getMoleculeData()" [disabled]="!smilesInput.trim() || loadingInfo">
           {{ loadingInfo ? 'Analyzing...' : 'Get Molecule Info' }}
         </button>
@@ -49,7 +49,7 @@
     <div class="draw-section">
       <h3>Draw Your Molecule</h3>
       <p class="draw-help">Use the molecular editor below to draw your molecule structure.</p>
-      <div class="draw-warning">
+      <div class="draw-warning help-text">
         <small>⚠️ Please draw only ONE connected molecule. Disconnected fragments will be rejected.</small>
       </div>
 
@@ -106,7 +106,7 @@
   <!-- Results Section -->
   @if(svgImage) {
   <div class="results-section">
-    <h2>Molecular Structure</h2>
+    <h2 class="molecular-title">Molecular Structure</h2>
 
     <div class="image-actions">
       <button (click)="downloadSVGFile()" class="btn-download">
@@ -139,7 +139,8 @@
           ✕
         </button>
         }
-        <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransform()"></div>
+        <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransform()">
+        </div>
       </div>
     </div>
     <!-- Bond Selection Section -->
@@ -161,7 +162,7 @@
       </div>
     </div>
     <div class="bond-help-text">
-      <small class="input-help">
+      <small class="help-text">
         Enter bond numbers separated by commas. Use dashes for ranges (e.g.,
         1,2,5-8,10)
       </small>
@@ -170,7 +171,7 @@
     <!-- Result Format Section -->
 
     <h3 class="title-format">Additional printable formats</h3>
-    <div class="format-checkboxes">
+    <div class="format-checkboxes" style="justify-content: center;">
       <div class="format-checkbox-group">
         <label class="format-checkbox-label">
           <input type="checkbox" [(ngModel)]="includeXyzFormat" class="format-checkbox-input" />
@@ -188,7 +189,7 @@
       </div>
     </div>
     <div class="format-help-text">
-      <small class="input-help">
+      <small class="help-text">
         Select one, both, or none of the additional printable formats for the BDE results
       </small>
     </div>
@@ -205,25 +206,39 @@
     <h2>Bond Dissociation Energy Results</h2>
     <!-- BDE Table -->
     <div class="bde-table-container">
-      <table class="bde-table">
+      <table class="bde-table"
+        style="width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,33,69,0.1);">
         <thead>
           <tr>
-            <th>Bond Index</th>
-            <th>Bond Atoms</th>
-            <th>Begin Atom</th>
-            <th>End Atom</th>
-            <th>BDE (kcal/mol)</th>
-            <th>Bond Type</th>
+            <th
+              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+              Bond Index</th>
+            <th
+              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+              Bond Atoms</th>
+            <th
+              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+              Begin Atom</th>
+            <th
+              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+              End Atom</th>
+            <th
+              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+              BDE (kcal/mol)</th>
+            <th
+              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+              Bond Type</th>
           </tr>
         </thead>
         <tbody>
           @for( bond of bdeResults.bonds_predicted; track bond.idx){
-          <tr class="bde-row">
+          <tr class="bde-row" style="transition:background 0.2s;">
             <td>{{ bond.idx }}</td>
             <td class="bond-atoms">{{ bond.bond_atoms }}</td>
             <td>{{ bond.begin_atom_idx }}</td>
             <td>{{ bond.end_atom_idx }}</td>
-            <td class="bde-value">
+            <td class="bde-value"
+              style="background:#e3f2fd; color:#003876; font-weight:700; border-radius:6px; box-shadow:0 2px 8px rgba(78,125,194,0.08);">
               {{ bond.bde !== null ? (bond.bde | number:'1.2-2') : 'N/A' }}
             </td>
             <td class="bond-type">{{ bond.bond_type || 'Unknown' }}</td>
