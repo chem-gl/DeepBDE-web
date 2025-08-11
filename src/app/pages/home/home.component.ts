@@ -10,6 +10,14 @@ import {
   MoleculeInfoResponseData,
   V1Service,
 } from '../../../../angular-client';
+
+declare global {
+  interface Window {
+    initRDKitModule?: any;
+    RDKit?: any;
+  }
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -19,48 +27,133 @@ import {
 })
 export class HomeComponent {
   // Controles independientes para imagen principal
-  zoomMain = 1.7;
-  panXMain = 0;
-  panYMain = 0;
-  isPanningMain = false;
-  lastPanXMain = 0;
-  lastPanYMain = 0;
-  isFullscreenMain = false;
+  private zoomMain = 1.7;
+  private panXMain = 0;
+  private panYMain = 0;
+  private isPanningMain = false;
+  private lastPanXMain = 0;
+  private lastPanYMain = 0;
+  public isFullscreenMain = false;
 
   // Controles independientes para imagen BDE Result
-  zoomBde = 1.7;
-  panXBde = 0;
-  panYBde = 0;
-  isPanningBde = false;
-  lastPanXBde = 0;
-  lastPanYBde = 0;
-  isFullscreenBde = false;
+  private zoomBde = 1.7;
+  private panXBde = 0;
+  private panYBde = 0;
+  private isPanningBde = false;
+  private lastPanXBde = 0;
+  private lastPanYBde = 0;
+  public isFullscreenBde = false;
+
+  // SVG sanitizado para bdeResults.image_svg
+  public bdeResultsSanitizedSvg: SafeHtml | null = null;
+  // Component properties for mode selection
+  public selectedMode: 'smiles' | 'fragments' = 'smiles';
+  public smilesInput = '';
+
+  // Properties for molecular analysis
+  public loadingInfo = false;
+  public error: string | null = null;
+  public svgImage: string | null = null;
+  public sanitizedSvg: SafeHtml | null = null;
+
+  // Properties for zoom and pan
+  public isFullscreen = false;
+
+  // Properties for bond selection
+  public selectAllBonds = true;
+  public customBondsInput = '';
+
+  // Properties for result format
+  public includeXyzFormat = false;
+  public includeSmilesFormat = false;
+  public moleculeInfo?: MoleculeInfoResponseData;
+  // Properties for BDE results
+  public bdeResults?: FragmentResponseData;
+  public loadingBDE = false;
+
+  @ViewChild('ketcherFrame') ketcherFrame!: ElementRef<HTMLIFrameElement>;
+
+  public smiles = '';
+  public ketcherLoaded = false;
+
+  private RDKit: any = null;
+  public rdkitReady = false;
+  constructor(
+    private readonly v1Service: V1Service,
+    private readonly sanitizer: DomSanitizer
+  ) {
+    // Add listener for Escape key
+    document.addEventListener('keydown', (event) => {
+      if (
+        event.key === 'Escape' &&
+        (this.isFullscreenMain || this.isFullscreenBde)
+      ) {
+        this.toggleFullscreenMain();
+        this.toggleFullscreenBde();
+      }
+    });
+  }
+
+  private async initRdkit() {
+    try {
+      // Si cargaste RDKit con <script> en index.html (CDN) o con assets.
+      if ((window as any).initRDKitModule) {
+        // Si tienes los archivos en /assets/rdkit, usa locateFile para que encuentre el .wasm
+        this.RDKit = await (window as any).initRDKitModule({
+          locateFile: (file: string) => `/assets/rdkit/${file}`,
+        });
+        (window as any).RDKit = this.RDKit; // opcional: exponer globalmente
+        this.rdkitReady = true;
+        console.log('RDKit cargado, versión:', this.RDKit?.version?.());
+      } else {
+        console.warn(
+          'initRDKitModule no encontrado en window. Revisa que RDKit_minimal.js esté cargado.'
+        );
+      }
+    } catch (err) {
+      console.error('Error inicializando RDKit:', err);
+    }
+  }
+
+  // Historial de SMILES
+  public smilesHistory: string[] = [];
+
+  public ngOnInit() {
+    const saved = localStorage.getItem('smilesHistory');
+    if (saved) {
+      try {
+        this.smilesHistory = JSON.parse(saved);
+      } catch {}
+    }
+    this.initRdkit();
+  }
+
   // Métodos para imagen principal
-  zoomInMain() {
+  public zoomInMain() {
     this.zoomMain = Math.min(this.zoomMain * 1.2, 15);
   }
-  zoomOutMain() {
+  public zoomOutMain() {
     this.zoomMain = Math.max(this.zoomMain / 1.2, 0.1);
   }
-  resetZoomMain() {
+  public resetZoomMain() {
     this.zoomMain = 1;
     this.panXMain = 0;
     this.panYMain = 0;
   }
-  toggleFullscreenMain() {
+  public toggleFullscreenMain() {
     this.isFullscreenMain = !this.isFullscreenMain;
     if (!this.isFullscreenMain) this.resetZoomMain();
   }
-  getTransformMain(): string {
+  public getTransformMain(): string {
     return `scale(${this.zoomMain}) translate(${this.panXMain}px, ${this.panYMain}px)`;
   }
-  startPanMain(event: MouseEvent) {
+  public startPanMain(event: MouseEvent) {
     this.isPanningMain = true;
     this.lastPanXMain = event.clientX;
     this.lastPanYMain = event.clientY;
     event.preventDefault();
   }
-  onPanMain(event: MouseEvent) {
+  public onPanMain(event: MouseEvent) {
     if (!this.isPanningMain) return;
     const deltaX = event.clientX - this.lastPanXMain;
     const deltaY = event.clientY - this.lastPanYMain;
@@ -69,41 +162,41 @@ export class HomeComponent {
     this.lastPanXMain = event.clientX;
     this.lastPanYMain = event.clientY;
   }
-  endPanMain() {
+  public endPanMain() {
     this.isPanningMain = false;
   }
-  onWheelMain(event: WheelEvent) {
+  public onWheelMain(event: WheelEvent) {
     event.preventDefault();
     const delta = event.deltaY > 0 ? 0.9 : 1.1;
     this.zoomMain = Math.max(0.1, Math.min(15, this.zoomMain * delta));
   }
 
   // Métodos para imagen BDE Result
-  zoomInBde() {
+  public zoomInBde() {
     this.zoomBde = Math.min(this.zoomBde * 1.2, 15);
   }
-  zoomOutBde() {
+  public zoomOutBde() {
     this.zoomBde = Math.max(this.zoomBde / 1.2, 0.1);
   }
-  resetZoomBde() {
+  public resetZoomBde() {
     this.zoomBde = 1;
     this.panXBde = 0;
     this.panYBde = 0;
   }
-  toggleFullscreenBde() {
+  public toggleFullscreenBde() {
     this.isFullscreenBde = !this.isFullscreenBde;
     if (!this.isFullscreenBde) this.resetZoomBde();
   }
-  getTransformBde(): string {
+  public getTransformBde(): string {
     return `scale(${this.zoomBde}) translate(${this.panXBde}px, ${this.panYBde}px)`;
   }
-  startPanBde(event: MouseEvent) {
+  public startPanBde(event: MouseEvent) {
     this.isPanningBde = true;
     this.lastPanXBde = event.clientX;
     this.lastPanYBde = event.clientY;
     event.preventDefault();
   }
-  onPanBde(event: MouseEvent) {
+  public onPanBde(event: MouseEvent) {
     if (!this.isPanningBde) return;
     const deltaX = event.clientX - this.lastPanXBde;
     const deltaY = event.clientY - this.lastPanYBde;
@@ -112,81 +205,20 @@ export class HomeComponent {
     this.lastPanXBde = event.clientX;
     this.lastPanYBde = event.clientY;
   }
-  endPanBde() {
+  public endPanBde() {
     this.isPanningBde = false;
   }
-  onWheelBde(event: WheelEvent) {
+  public onWheelBde(event: WheelEvent) {
     event.preventDefault();
     const delta = event.deltaY > 0 ? 0.9 : 1.1;
     this.zoomBde = Math.max(0.1, Math.min(15, this.zoomBde * delta));
   }
-  // SVG sanitizado para bdeResults.image_svg
-  bdeResultsSanitizedSvg: SafeHtml | null = null;
-  // Component properties for mode selection
-  selectedMode: 'smiles' | 'fragments' = 'smiles';
-  smilesInput = '';
 
-  // Properties for molecular analysis
-  loadingInfo = false;
-  error: string | null = null;
-  svgImage: string | null = null;
-  sanitizedSvg: SafeHtml | null = null;
-
-  // Properties for zoom and pan
-  zoom = 1.7;
-  panX = 0;
-  panY = 0;
-  isPanning = false;
-  lastPanX = 0;
-  lastPanY = 0;
-  isFullscreen = false;
-
-  // Properties for bond selection
-  selectAllBonds = true;
-  customBondsInput = '';
-
-  // Properties for result format
-  includeXyzFormat = false;
-  includeSmilesFormat = false;
-  moleculeInfo?: MoleculeInfoResponseData;
-  // Properties for BDE results
-  bdeResults?: FragmentResponseData;
-  loadingBDE = false;
-  private editor: any;
-  constructor(
-    private readonly v1Service: V1Service,
-    private readonly sanitizer: DomSanitizer
-  ) {
-    // Add listener for Escape key
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && this.isFullscreen) {
-        this.toggleFullscreen();
-      }
-    });
-  }
-
-  @ViewChild('ketcherFrame') ketcherFrame!: ElementRef<HTMLIFrameElement>;
-
-  smiles = '';
-  ketcherLoaded = false;
-
-  // Historial de SMILES
-  smilesHistory: string[] = [];
-
-  ngOnInit() {
-    const saved = localStorage.getItem('smilesHistory');
-    if (saved) {
-      try {
-        this.smilesHistory = JSON.parse(saved);
-      } catch {}
-    }
-  }
-
-  saveSmilesHistory() {
+  public saveSmilesHistory() {
     localStorage.setItem('smilesHistory', JSON.stringify(this.smilesHistory));
   }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit() {
     // Solo configurar el iframe si está presente en el DOM
     this.setupKetcherIfAvailable();
   }
@@ -208,7 +240,7 @@ export class HomeComponent {
     }, 100);
   }
 
-  async getSmiles() {
+  public async getSmiles() {
     if (!this.ketcherFrame || !this.ketcherFrame.nativeElement) {
       console.error(
         'Ketcher iframe is not available. Make sure you are in Draw Molecule mode.'
@@ -313,7 +345,7 @@ export class HomeComponent {
   }
 
   // Método para analizar la molécula dibujada en Ketcher
-  analyzeMoleculeFromDrawing() {
+  public analyzeMoleculeFromDrawing() {
     if (!this.smiles.trim()) {
       this.error = 'Please draw a molecule and get SMILES first';
       return;
@@ -415,8 +447,20 @@ export class HomeComponent {
         return false;
       }
     }
+    //verificar que sea un smile correcto con rdkit
+    if (this.RDKit) {
+      try {
+        const mol = this.RDKit.get_mol(trimmedSmiles);
+        if (!mol.is_valid()) {
+          this.error = 'Invalid SMILES: The SMILES string is not valid.';
+          return false;
+        }
+      } catch (e) {
+        this.error = 'Invalid SMILES: Error parsing SMILES with RDKit.';
+        return false;
+      }
+    }
 
-    console.log('SMILES validation passed:', trimmedSmiles);
     return true;
   }
 
@@ -457,8 +501,6 @@ export class HomeComponent {
     this.sanitizedSvg = null;
     this.error = null;
     this.bdeResults = undefined;
-    this.resetZoom();
-    this.isFullscreen = false;
   }
 
   // Handle bond selection change
@@ -476,17 +518,10 @@ export class HomeComponent {
   }
 
   // Get BDE method
-  getBDE() {
-    console.log('Getting BDE with formats:');
-    console.log('Include XYZ:', this.includeXyzFormat);
-    console.log('Include SMILES:', this.includeSmilesFormat);
-
+  public getBDE() {
     if (!this.includeXyzFormat && !this.includeSmilesFormat) {
-      console.log('No output format selected - will use default behavior');
+      console.error('No output format selected - will use default behavior');
     }
-
-    console.log('Select all bonds:', this.selectAllBonds);
-    console.log('Custom bonds:', this.customBondsInput);
 
     if (!this.moleculeInfo) {
       this.error = 'Molecule information is required to get BDE';
@@ -614,7 +649,7 @@ export class HomeComponent {
   }
 
   // Analyze molecule method
-  getMoleculeData() {
+  public getMoleculeData() {
     if (!this.smilesInput.trim()) {
       return;
     }
@@ -711,62 +746,7 @@ export class HomeComponent {
     return cleanSvg;
   }
 
-  // Zoom and pan methods
-  zoomIn() {
-    this.zoom = Math.min(this.zoom * 1.2, 15);
-  }
-
-  zoomOut() {
-    this.zoom = Math.max(this.zoom / 1.2, 0.1);
-  }
-
-  resetZoom() {
-    this.zoom = 1;
-    this.panX = 0;
-    this.panY = 0;
-  }
-
-  toggleFullscreen() {
-    this.isFullscreen = !this.isFullscreen;
-    if (!this.isFullscreen) {
-      this.resetZoom();
-    }
-  }
-
-  getTransform(): string {
-    return `scale(${this.zoom}) translate(${this.panX}px, ${this.panY}px)`;
-  }
-
-  startPan(event: MouseEvent) {
-    this.isPanning = true;
-    this.lastPanX = event.clientX;
-    this.lastPanY = event.clientY;
-    event.preventDefault();
-  }
-
-  onPan(event: MouseEvent) {
-    if (!this.isPanning) return;
-
-    const deltaX = event.clientX - this.lastPanX;
-    const deltaY = event.clientY - this.lastPanY;
-
-    this.panX += deltaX / this.zoom;
-    this.panY += deltaY / this.zoom;
-
-    this.lastPanX = event.clientX;
-    this.lastPanY = event.clientY;
-  }
-
-  endPan() {
-    this.isPanning = false;
-  }
-
-  onWheel(event: WheelEvent) {
-    event.preventDefault();
-    const delta = event.deltaY > 0 ? 0.9 : 1.1;
-    this.zoom = Math.max(0.1, Math.min(15, this.zoom * delta));
-  }
-  downloadSVGFile(useBdeResults?: boolean) {
+  public downloadSVGFile(useBdeResults?: boolean) {
     let svgToDownload = this.svgImage;
     let filename = `molecular_structure_${this.smilesInput.replace(
       /[^a-zA-Z0-9]/g,
@@ -799,7 +779,7 @@ export class HomeComponent {
     }
   }
 
-  downloadPNGFile(useBdeResults?: boolean) {
+  public downloadPNGFile(useBdeResults?: boolean) {
     let svgToDownload = this.svgImage;
     let filename = `molecular_structure_${this.smilesInput.replace(
       /[^a-zA-Z0-9]/g,
@@ -870,7 +850,7 @@ export class HomeComponent {
   }
 
   // Download BDE results as SMILES
-  downloadSmilesData() {
+  public downloadSmilesData() {
     if (!this.bdeResults?.smiles_list) {
       this.error = 'No SMILES data available for download';
       return;
@@ -903,7 +883,7 @@ export class HomeComponent {
   }
 
   // Download BDE results as XYZ
-  downloadXyzData() {
+  public downloadXyzData() {
     if (!this.bdeResults?.xyz_block) {
       this.error = 'No XYZ data available for download';
       return;
@@ -933,7 +913,7 @@ export class HomeComponent {
   }
 
   // Download BDE results as CSV
-  downloadBdeTableCSV() {
+  public downloadBdeTableCSV() {
     if (!this.bdeResults?.bonds_predicted) {
       this.error = 'No BDE data available for download';
       return;
@@ -969,16 +949,5 @@ export class HomeComponent {
       this.error = 'Error downloading BDE table';
       console.error('Error downloading CSV:', error);
     }
-  }
-
-  // Seleccionar SMILES del historial
-  selectHistorySmiles(smiles: string) {
-    this.smilesInput = smiles;
-  }
-
-  // Método para eliminar moléculas del historial
-  removeSmilesHistory(item: string) {
-    this.smilesHistory = this.smilesHistory.filter((s) => s !== item);
-    this.saveSmilesHistory();
   }
 }
