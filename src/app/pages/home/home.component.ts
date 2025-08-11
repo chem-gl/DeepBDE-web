@@ -466,6 +466,13 @@ export class HomeComponent {
     if (this.selectAllBonds) {
       this.customBondsInput = '';
     }
+    //muevo el cursor al input de bonds
+    setTimeout(() => {
+      const bondsInput = document.getElementById('custom-bonds');
+      if (bondsInput) {
+        bondsInput.focus();
+      }
+    }, 0);
   }
 
   // Get BDE method
