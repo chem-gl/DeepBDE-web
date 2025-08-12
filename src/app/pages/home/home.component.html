@@ -111,7 +111,8 @@
       <h3>Upload or add a SMILES list</h3>
       <div class="smiles-list-actions">
         <div class="smiles-list-row">
-          <input type="file" accept=".txt,.csv" (change)="onSmilesFileUpload($event)" class="smiles-file-input" />
+          <input type="file" accept=".txt,.smiles,.smi,.smile" (change)="onSmilesFileUpload($event)"
+            class="smiles-file-input" />
           <input type="text" [(ngModel)]="smilesListInput" placeholder="Add SMILES" class="smiles-input" />
           <button class="btn-add" (click)="addSmilesToList()" [disabled]="!smilesListInput.trim()">Agregar</button>
         </div>
@@ -192,63 +193,66 @@
     <div class="noButton2" (click)="toggleResults()">
       {{ showResults ? 'Hide Results' : 'Show Results' }}
     </div>
-    @if(allBDEResults && allBDEResults.length > 0 && allBDEResults.length < 1000 && showResults) { <div
-      *ngFor="let result of allBDEResults" class="bde-results-section">
-      <h3 class="molecular-title">Molecule: {{ result.smiles }}</h3>
-      <div class="molecule-image">
-        <div [class.fullscreen]="result.isFullscreen" class="svg-display">
-          <button *ngIf="result.isFullscreen" (click)="toggleFullscreen(result)" class="close-fullscreen-btn">✕</button>
-          <div class="svg-content" [style.transform]="'scale(' + (result.zoom || 1) + ')'">
-            <div [innerHTML]="getSanitizedSvg(result.image_svg)" class="svg-content"
-              [style.transform]="getTransform(result)" (mousedown)="startPan(result, $event)"
-              (mousemove)="onPan(result, $event)" (mouseup)="endPan(result)" (mouseleave)="endPan(result)"
-              (wheel)="onWheel(result, $event)">
+    <div class="bde-results-section-scroll">
+      @if(allBDEResults && allBDEResults.length > 0 && allBDEResults.length < 1000 && showResults) { <div
+        *ngFor="let result of allBDEResults" class="bde-results-section">
+        <h3 class="molecular-title">Molecule: {{ result.smiles }}</h3>
+        <div class="molecule-image">
+          <div [class.fullscreen]="result.isFullscreen" class="svg-display">
+            <button *ngIf="result.isFullscreen" (click)="toggleFullscreen(result)"
+              class="close-fullscreen-btn">✕</button>
+            <div class="svg-content" [style.transform]="'scale(' + (result.zoom || 1) + ')'">
+              <div [innerHTML]="getSanitizedSvg(result.image_svg)" class="svg-content"
+                [style.transform]="getTransform(result)" (mousedown)="startPan(result, $event)"
+                (mousemove)="onPan(result, $event)" (mouseup)="endPan(result)" (mouseleave)="endPan(result)"
+                (wheel)="onWheel(result, $event)">
+              </div>
             </div>
           </div>
+          <div class="image-controls">
+            <button (click)="zoomIn(result)" class="control-btn" title="Zoom In">🔍+</button>
+            <button (click)="zoomOut(result)" class="control-btn" title="Zoom Out">🔍-</button>
+            <button (click)="resetZoom(result)" class="control-btn" title="Original Size">↻</button>
+            <button (click)="toggleFullscreen(result)" class="control-btn" title="Fullscreen">⛶</button>
+            <button (click)="downloadImage(result)" class="control-btn" title="Download Image">
+              ⬇ SVG Image
+            </button>
+            <button (click)="downloadSmiles(result)" class="control-btn" title="Download SMILES">
+              xyz format 📄
+            </button>
+            <button (click)="downloadXyz(result)" class="control-btn" title="Download XYZ">
+              smiles format 🧪
+            </button>
+          </div>
         </div>
-        <div class="image-controls">
-          <button (click)="zoomIn(result)" class="control-btn" title="Zoom In">🔍+</button>
-          <button (click)="zoomOut(result)" class="control-btn" title="Zoom Out">🔍-</button>
-          <button (click)="resetZoom(result)" class="control-btn" title="Original Size">↻</button>
-          <button (click)="toggleFullscreen(result)" class="control-btn" title="Fullscreen">⛶</button>
-          <button (click)="downloadImage(result)" class="control-btn" title="Download Image">
-            ⬇ SVG Image
-          </button>
-          <button (click)="downloadSmiles(result)" class="control-btn" title="Download SMILES">
-            xyz format 📄
-          </button>
-          <button (click)="downloadXyz(result)" class="control-btn" title="Download XYZ">
-            smiles format 🧪
-          </button>
+        <div class="bde-table-container">
+          <table class="bde-table">
+            <thead>
+              <tr>
+                <th>Bond Index</th>
+                <th>Bond Atoms</th>
+                <th>Begin Atom</th>
+                <th>End Atom</th>
+                <th>BDE (kcal/mol)</th>
+                <th>Bond Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let bond of result.bonds_predicted">
+                <td>{{ bond.idx }}</td>
+                <td>{{ bond.bond_atoms }}</td>
+                <td>{{ bond.begin_atom_idx }}</td>
+                <td>{{ bond.end_atom_idx }}</td>
+                <td>{{ bond.bde !== null ? bond.bde.toFixed(2) : 'N/A' }}</td>
+                <td>{{ bond.bond_type || 'Unknown' }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-      <div class="bde-table-container">
-        <table class="bde-table">
-          <thead>
-            <tr>
-              <th>Bond Index</th>
-              <th>Bond Atoms</th>
-              <th>Begin Atom</th>
-              <th>End Atom</th>
-              <th>BDE (kcal/mol)</th>
-              <th>Bond Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let bond of result.bonds_predicted">
-              <td>{{ bond.idx }}</td>
-              <td>{{ bond.bond_atoms }}</td>
-              <td>{{ bond.begin_atom_idx }}</td>
-              <td>{{ bond.end_atom_idx }}</td>
-              <td>{{ bond.bde !== null ? bond.bde.toFixed(2) : 'N/A' }}</td>
-              <td>{{ bond.bond_type || 'Unknown' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    </div>
 
+    }
 </div>
-}
 }
 </section>
 

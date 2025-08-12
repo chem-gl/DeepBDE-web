@@ -1133,7 +1133,7 @@ export class HomeComponent {
       link.download = `bde_results_xyz_${this.smilesInput.replace(
         /[^a-zA-Z0-9]/g,
         '_'
-      )}.xyz`;
+      )}.txt`;
 
       document.body.appendChild(link);
       link.click();
@@ -1289,7 +1289,7 @@ export class HomeComponent {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${result.smiles || 'result'}.smiles`;
+    link.download = `${result.smiles || 'result'}.txt`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -1302,7 +1302,7 @@ export class HomeComponent {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${result.smiles || 'result'}.xyz`;
+    link.download = `${result.smiles || 'result'}.txt`;
     link.click();
     URL.revokeObjectURL(url);
   }

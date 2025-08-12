@@ -89,10 +89,9 @@
       border-color: $border-active;
     }
 
-    h4 {
+    h5 {
       font-size: 1.3rem;
-      color: $primary-blue;
-      margin-bottom: 1rem;
+      color: $text-primary;
       font-weight: 600;
     }
 
@@ -266,6 +265,55 @@
   }
 }
 
+.authors-section {
+  text-align: center;
+  margin: 2rem auto;
+
+  h3 {
+    @include section-title;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.authors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+
+  @include mobile {
+    gap: 1rem;
+  }
+}
+
+.author-card {
+  background: $light-gray-1;
+  border: 1px solid $border-light;
+  border-radius: 10px;
+  padding: 1rem;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+  @include mobile {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+.author-card img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.author-card p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $text-primary;
+}
+
 // Mobile responsiveness
 @include mobile {
   .about-container {
@@ -334,5 +382,22 @@
         padding: 1.2rem;
       }
     }
+  }
+
+  .authors-section {
+    margin: 1.5rem auto;
+
+    h3 {
+      font-size: 1.8rem;
+    }
+  }
+
+  .authors-grid {
+    gap: 1rem;
+  }
+
+  .author-card {
+    width: 100%;
+    max-width: 300px;
   }
 }
