@@ -9,14 +9,14 @@ import { Component } from '@angular/core';
   styleUrls: ['./citation.component.scss'],
 })
 export class CitationComponent {
-  academicCitation = `DeepBDE: A Graph Neural Network for Bond Dissociation Energies Prediction
+  academicCitation = ` Paper in preparation: DeepBDE, a graph neural network for fast and accurate bond dissociation enthalpies
 Authors: [To be updated with actual authors]
 Journal: [To be updated with publication details]
 Year: 2024
 DOI: [To be updated]`;
 
   bibtexCitation = `@article{deepbde2024,
-  title={DeepBDE: A Graph Neural Network for Bond Dissociation Energies Prediction},
+  title={Paper in preparation: DeepBDE, a graph neural network for fast and accurate bond dissociation enthalpies},
   author={[To be updated with actual authors]},
   journal={[To be updated with journal name]},
   year={2024},
