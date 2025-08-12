@@ -178,6 +178,8 @@ export class HomeComponent {
       .map((s) => s.smiles);
 
     if (validSmiles.length === 0) return;
+    //se limpian los resultados anteriores
+    this.allBDEResults = [];
 
     this.loadingBDE = true; // Activar indicador de carga
 

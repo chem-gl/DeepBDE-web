@@ -116,6 +116,7 @@
           <button class="btn-add" (click)="addSmilesToList()" [disabled]="!smilesListInput.trim()">Agregar</button>
         </div>
       </div>
+      @if(smilesList.length > 0) {
       <table class="smiles-table">
         <thead>
           <tr>
@@ -152,7 +153,7 @@
           </tr>
         </tbody>
       </table>
-
+      }
       <!-- Modal para mostrar imagen SVG generada por RDKit -->
       <div class="modal-preview" *ngIf="previewModalOpen" (click)="closePreviewModal()">
         <div class="modal-content" (click)="$event.stopPropagation()">
