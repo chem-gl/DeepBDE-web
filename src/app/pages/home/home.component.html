@@ -27,6 +27,9 @@
       <button (click)="setMode('fragments')" [class.active]="selectedMode === 'fragments'" class="mode-btn">
         Draw Molecule
       </button>
+      <button (click)="setMode('smilesList')" [class.active]="selectedMode === 'smilesList'" class="mode-btn">
+        Batch SMILES Analysis
+      </button>
     </div>
 
     @if(selectedMode === 'smiles') {
@@ -103,40 +106,340 @@
       }
     </div>
     }
-  </section>
+    @else if(selectedMode === 'smilesList') {
+    <div class="smiles-list-section">
+      <h3>Upload or add a SMILES list</h3>
+      <div class="smiles-list-actions">
+        <div class="smiles-list-row">
+          <input type="file" accept=".txt,.csv" (change)="onSmilesFileUpload($event)" class="smiles-file-input" />
+          <input type="text" [(ngModel)]="smilesListInput" placeholder="Add SMILES" class="smiles-input" />
+          <button class="btn-add" (click)="addSmilesToList()" [disabled]="!smilesListInput.trim()">Agregar</button>
+        </div>
+      </div>
+      <table class="smiles-table">
+        <thead>
+          <tr>
+            <th>SMILES</th>
+            <th></th>
+            <th>Preview</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of smilesList; trackBy: trackSmiles">
+            <td><code>{{ item.smiles }}</code></td>
+            <td>
+              <ng-container *ngIf="item.valid === true">
+                <span style="color:green; font-size:1.1em;">✔️</span>
+              </ng-container>
+              <ng-container *ngIf="item.valid === false">
+                <span style="color:red; font-size:1.1em;">❌</span>
+              </ng-container>
+              <ng-container *ngIf="item.valid === null">
+                <span style="color:gray; font-size:1.1em;">⏳</span>
+              </ng-container>
+            </td>
+            <td>
+              @if(item.valid === true) {
+              <div class="noButton" (click)="openSmilesPreview(item)">🔍</div>
+              } @else {
+              No Preview Available
+              }
+            </td>
+            <td>
+              <div class="noButton" (click)="removeSmilesFromList(item)">🗑️</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-  <!-- Loading Section -->
-  @if(loadingInfo) {
-  <div class="loading-section">
-    <div class="spinner"></div>
-    <p>Getting molecular information...</p>
+      <!-- Modal para mostrar imagen SVG generada por RDKit -->
+      <div class="modal-preview" *ngIf="previewModalOpen" (click)="closePreviewModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <button class="modal-close" (click)="closePreviewModal()">✕</button>
+          <div class="modal-svg" [innerHTML]="previewSvg">
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- Loading BDE Indicator -->
+    @if(loadingBDE) {
+    <div class="loading-indicator">
+      <img src="/ball-triangle.svg" alt="Loading..." />
+    </div>
+    }@else{
+    <button class="btn-primary" (click)="analyzeSmilesList()" [disabled]="!hasValidSmiles()"
+      style="display: block; margin: 10px auto; text-align: center;">
+      Get BDE for all valid SMILES ({{ getValidSmilesCount() }})
+    </button>
+    }
+    }
+
+
+    @if(allBDEResults.length > 0 && !loadingBDE && selectedMode === 'smilesList') {
+
+    <div *ngIf="allBDEResults.length > 0" class="download-section">
+      <span class="noButton " (click)="downloadReports('smiles')">
+        Download SMILES Reports (ZIP)
+      </span>
+      <span class="noButton " (click)="downloadReports('xyz')" style="margin-left: 1rem;">
+        Download XYZ Reports (ZIP)
+      </span>
+
+    </div>
+    <div class="noButton2" (click)="toggleResults()">
+      {{ showResults ? 'Hide Results' : 'Show Results' }}
+    </div>
+    @if(allBDEResults && allBDEResults.length > 0 && allBDEResults.length < 1000 && showResults) { <div
+      *ngFor="let result of allBDEResults" class="bde-results-section">
+      <h3 class="molecular-title">Molecule: {{ result.smiles }}</h3>
+      <div class="molecule-image">
+        <div [class.fullscreen]="result.isFullscreen" class="svg-display">
+          <button *ngIf="result.isFullscreen" (click)="toggleFullscreen(result)" class="close-fullscreen-btn">✕</button>
+          <div class="svg-content" [style.transform]="'scale(' + (result.zoom || 1) + ')'">
+            <div [innerHTML]="getSanitizedSvg(result.image_svg)" class="svg-content"
+              [style.transform]="getTransform(result)" (mousedown)="startPan(result, $event)"
+              (mousemove)="onPan(result, $event)" (mouseup)="endPan(result)" (mouseleave)="endPan(result)"
+              (wheel)="onWheel(result, $event)">
+            </div>
+          </div>
+        </div>
+        <div class="image-controls">
+          <button (click)="zoomIn(result)" class="control-btn" title="Zoom In">🔍+</button>
+          <button (click)="zoomOut(result)" class="control-btn" title="Zoom Out">🔍-</button>
+          <button (click)="resetZoom(result)" class="control-btn" title="Original Size">↻</button>
+          <button (click)="toggleFullscreen(result)" class="control-btn" title="Fullscreen">⛶</button>
+          <button (click)="downloadImage(result)" class="control-btn" title="Download Image">
+            ⬇ SVG Image
+          </button>
+          <button (click)="downloadSmiles(result)" class="control-btn" title="Download SMILES">
+            xyz format 📄
+          </button>
+          <button (click)="downloadXyz(result)" class="control-btn" title="Download XYZ">
+            smiles format 🧪
+          </button>
+        </div>
+      </div>
+      <div class="bde-table-container">
+        <table class="bde-table">
+          <thead>
+            <tr>
+              <th>Bond Index</th>
+              <th>Bond Atoms</th>
+              <th>Begin Atom</th>
+              <th>End Atom</th>
+              <th>BDE (kcal/mol)</th>
+              <th>Bond Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bond of result.bonds_predicted">
+              <td>{{ bond.idx }}</td>
+              <td>{{ bond.bond_atoms }}</td>
+              <td>{{ bond.begin_atom_idx }}</td>
+              <td>{{ bond.end_atom_idx }}</td>
+              <td>{{ bond.bde !== null ? bond.bde.toFixed(2) : 'N/A' }}</td>
+              <td>{{ bond.bond_type || 'Unknown' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+</div>
+}
+}
+</section>
+
+<!-- Loading Section -->
+@if(loadingInfo) {
+<div class="loading-section">
+  <div class="spinner"></div>
+  <p>Getting molecular information...</p>
+</div>
+}
+<!-- Results Section -->
+@if(svgImage) {
+<div class="results-section">
+  <h2 class="molecular-title">Molecular Structure</h2>
+
+  <div class="image-actions">
+    <button (click)="downloadSVGFile()" class="btn-download">
+      🖼️ Download SVG
+    </button>
+    <button (click)="downloadPNGFile()" class="btn-download" style="margin-left: 0.5rem;">
+      📷 Download PNG
+    </button>
   </div>
-  }
-  <!-- Results Section -->
-  @if(svgImage) {
-  <div class="results-section">
-    <h2 class="molecular-title">Molecular Structure</h2>
+  <div class="image-container">
+    <div class="image-controls">
+      <button (click)="zoomInMain()" class="control-btn" title="Zoom In">
+        🔍+
+      </button>
+      <button (click)="zoomOutMain()" class="control-btn" title="Zoom Out">
+        🔍-
+      </button>
+      <button (click)="resetZoomMain()" class="control-btn" title="Original Size">
+        ↻
+      </button>
+      <button (click)="toggleFullscreenMain()" class="control-btn" title="Fullscreen">
+        ⛶
+      </button>
+    </div>
+    <div class="draw-warning help-text">
+      <small>
+        <span
+          style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#222; margin-right:6px; vertical-align:middle;"></span>
+        Atoms
+        <span
+          style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#1976d2; margin:0 6px; vertical-align:middle;"></span>
+        Bonds
+      </small>
+    </div>
+    <div class="svg-display" [class.fullscreen]="isFullscreenMain" #svgContainerMain (mousedown)="startPanMain($event)"
+      (mousemove)="onPanMain($event)" (mouseup)="endPanMain()" (mouseleave)="endPanMain()"
+      (wheel)="onWheelMain($event)">
+      <!-- Close fullscreen button -->
+      @if(isFullscreenMain) {
+      <button (click)="toggleFullscreenMain()" class="close-fullscreen-btn" title="Close fullscreen">
+        ✕
+      </button>
+      }
 
+      <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransformMain()">
+      </div>
+    </div>
+  </div>
+  <!-- Bond Selection Section -->
+  <h3 class="title-bond">Bond calculation options</h3>
+  <div class="bond-options-horizontal">
+    <div class="checkbox-group">
+      <label class="checkbox-label">
+        <input type="checkbox" [(ngModel)]="selectAllBonds" (change)="onSelectAllBondsChange()"
+          class="checkbox-input" />
+        <span class="checkbox-custom"></span>
+        Calculate all non-ring single bonds
+      </label>
+    </div>
+
+    <div class="custom-bonds-input" [class.disabled]="selectAllBonds">
+      <label for="custom-bonds">Select specific bonds or ranges:</label>
+      <input id="custom-bonds" type="text" [(ngModel)]="customBondsInput" placeholder="e.g., 1,2,5-8,10"
+        class="bonds-input" [disabled]="selectAllBonds" />
+    </div>
+  </div>
+  <div class="bond-help-text">
+    <small class="help-text">
+      Enter bond numbers separated by commas. Use dashes for ranges (e.g.,
+      1,2,5-8,10)
+    </small>
+  </div>
+
+  <!-- Result Format Section -->
+
+  <h3 class="title-format">Optionally, you can export the bond dissociation fragments in the following formats</h3>
+  <div class="format-checkboxes" style="justify-content: center;">
+    <div class="format-checkbox-group">
+      <label class="format-checkbox-label">
+        <input type="checkbox" [(ngModel)]="includeXyzFormat" class="format-checkbox-input" />
+        <span class="format-checkbox-custom"></span>
+        XYZ Format
+      </label>
+    </div>
+
+    <div class="format-checkbox-group">
+      <label class="format-checkbox-label">
+        <input type="checkbox" [(ngModel)]="includeSmilesFormat" class="format-checkbox-input" />
+        <span class="format-checkbox-custom"></span>
+        SMILES Format
+      </label>
+    </div>
+  </div>
+  <div class="format-help-text">
+    <small class="help-text">
+      Select one, both, or none of the additional printable formats for the BDE results
+    </small>
+  </div>
+  <div class="bde-action">
+    <button class="btn-bde" (click)="getBDE()" [disabled]="loadingBDE">
+      {{ loadingBDE ? 'Getting BDE...' : 'Get BDE' }}
+    </button>
+  </div>
+</div>
+}
+<!-- BDE Results Section -->
+@if(bdeResults) {
+<div class="bde-results-section">
+  <h2>Bond Dissociation Energy Results</h2>
+  <!-- BDE Table -->
+  <div class="bde-table-container">
+    <table class="bde-table"
+      style="width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,33,69,0.1);">
+      <thead>
+        <tr>
+          <th
+            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            Bond Index</th>
+          <th
+            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            Bond Atoms</th>
+          <th
+            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            Begin Atom</th>
+          <th
+            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            End Atom</th>
+          <th
+            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            BDE (kcal/mol)</th>
+          <th
+            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            Bond Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for( bond of bdeResults.bonds_predicted; track bond.idx){
+        <tr class="bde-row" style="transition:background 0.2s;">
+          <td>{{ bond.idx }}</td>
+          <td class="bond-atoms">{{ bond.bond_atoms }}</td>
+          <td>{{ bond.begin_atom_idx }}</td>
+          <td>{{ bond.end_atom_idx }}</td>
+          <td class="bde-value"
+            style="background:#e3f2fd; color:#003876; font-weight:700; border-radius:6px; box-shadow:0 2px 8px rgba(78,125,194,0.08);">
+            {{ bond.bde !== null ? (bond.bde | number:'1.2-2') : 'N/A' }}
+          </td>
+          <td class="bond-type">{{ bond.bond_type || 'Unknown' }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Export Buttons -->
+  <!-- SVG molecular structure from BDE results -->
+  @if(bdeResults.image_svg) {
+  <div class="results-section">
+    <h2 class="molecular-title">Molecular Structure (BDE Result)</h2>
     <div class="image-actions">
-      <button (click)="downloadSVGFile()" class="btn-download">
+      <button (click)="downloadSVGFile(true)" class="btn-download">
         🖼️ Download SVG
       </button>
-      <button (click)="downloadPNGFile()" class="btn-download" style="margin-left: 0.5rem;">
+      <button (click)="downloadPNGFile(true)" class="btn-download" style="margin-left: 0.5rem;">
         📷 Download PNG
       </button>
     </div>
     <div class="image-container">
       <div class="image-controls">
-        <button (click)="zoomInMain()" class="control-btn" title="Zoom In">
+        <button (click)="zoomInBde()" class="control-btn" title="Zoom In">
           🔍+
         </button>
-        <button (click)="zoomOutMain()" class="control-btn" title="Zoom Out">
+        <button (click)="zoomOutBde()" class="control-btn" title="Zoom Out">
           🔍-
         </button>
-        <button (click)="resetZoomMain()" class="control-btn" title="Original Size">
+        <button (click)="resetZoomBde()" class="control-btn" title="Original Size">
           ↻
         </button>
-        <button (click)="toggleFullscreenMain()" class="control-btn" title="Fullscreen">
+        <button (click)="toggleFullscreenBde()" class="control-btn" title="Fullscreen">
           ⛶
         </button>
       </div>
@@ -147,219 +450,61 @@
           Atoms
           <span
             style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#1976d2; margin:0 6px; vertical-align:middle;"></span>
-          Bonds
+          BDE value
         </small>
       </div>
-      <div class="svg-display" [class.fullscreen]="isFullscreenMain" #svgContainerMain
-        (mousedown)="startPanMain($event)" (mousemove)="onPanMain($event)" (mouseup)="endPanMain()"
-        (mouseleave)="endPanMain()" (wheel)="onWheelMain($event)">
+      <div class="svg-display" [class.fullscreen]="isFullscreenBde" #svgContainerBde (mousedown)="startPanBde($event)"
+        (mousemove)="onPanBde($event)" (mouseup)="endPanBde()" (mouseleave)="endPanBde()" (wheel)="onWheelBde($event)">
         <!-- Close fullscreen button -->
-        @if(isFullscreenMain) {
-        <button (click)="toggleFullscreenMain()" class="close-fullscreen-btn" title="Close fullscreen">
+        @if(isFullscreenBde) {
+        <button (click)="toggleFullscreenBde()" class="close-fullscreen-btn" title="Close fullscreen">
           ✕
         </button>
         }
 
-        <div [innerHTML]="sanitizedSvg" class="svg-content" [style.transform]="getTransformMain()">
+        <div class="svg-content" [innerHTML]="bdeResultsSanitizedSvg" [style.transform]="getTransformBde()">
         </div>
       </div>
     </div>
-    <!-- Bond Selection Section -->
-    <h3 class="title-bond">Bond calculation options</h3>
-    <div class="bond-options-horizontal">
-      <div class="checkbox-group">
-        <label class="checkbox-label">
-          <input type="checkbox" [(ngModel)]="selectAllBonds" (change)="onSelectAllBondsChange()"
-            class="checkbox-input" />
-          <span class="checkbox-custom"></span>
-          Calculate all non-ring single bonds
-        </label>
-      </div>
-
-      <div class="custom-bonds-input" [class.disabled]="selectAllBonds">
-        <label for="custom-bonds">Select specific bonds or ranges:</label>
-        <input id="custom-bonds" type="text" [(ngModel)]="customBondsInput" placeholder="e.g., 1,2,5-8,10"
-          class="bonds-input" [disabled]="selectAllBonds" />
-      </div>
-    </div>
-    <div class="bond-help-text">
-      <small class="help-text">
-        Enter bond numbers separated by commas. Use dashes for ranges (e.g.,
-        1,2,5-8,10)
-      </small>
-    </div>
-
-    <!-- Result Format Section -->
-
-    <h3 class="title-format">Optionally, you can export the bond dissociation fragments in the following formats</h3>
-    <div class="format-checkboxes" style="justify-content: center;">
-      <div class="format-checkbox-group">
-        <label class="format-checkbox-label">
-          <input type="checkbox" [(ngModel)]="includeXyzFormat" class="format-checkbox-input" />
-          <span class="format-checkbox-custom"></span>
-          XYZ Format
-        </label>
-      </div>
-
-      <div class="format-checkbox-group">
-        <label class="format-checkbox-label">
-          <input type="checkbox" [(ngModel)]="includeSmilesFormat" class="format-checkbox-input" />
-          <span class="format-checkbox-custom"></span>
-          SMILES Format
-        </label>
-      </div>
-    </div>
-    <div class="format-help-text">
-      <small class="help-text">
-        Select one, both, or none of the additional printable formats for the BDE results
-      </small>
-    </div>
-    <div class="bde-action">
-      <button class="btn-bde" (click)="getBDE()" [disabled]="loadingBDE">
-        {{ loadingBDE ? 'Getting BDE...' : 'Get BDE' }}
+  </div>
+  }
+  <div class="export-actions">
+    <h3>Export Data</h3>
+    <div class="export-buttons">
+      @if(bdeResults.smiles_list && bdeResults.smiles_list.length > 0){
+      <button (click)="downloadSmilesData()" class="btn-export">
+        📄 Download BDE fragment SMILES
+      </button>
+      }
+      @if(bdeResults.xyz_block){
+      <button (click)="downloadXyzData()" class="btn-export">
+        🧪 Download BDE fragment XYZ
+      </button>
+      }
+      <button (click)="downloadBdeTableCSV()" class="btn-export">
+        📊 Download this Table (CSV)
       </button>
     </div>
   </div>
-  }
-  <!-- BDE Results Section -->
-  @if(bdeResults) {
-  <div class="bde-results-section">
-    <h2>Bond Dissociation Energy Results</h2>
-    <!-- BDE Table -->
-    <div class="bde-table-container">
-      <table class="bde-table"
-        style="width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,33,69,0.1);">
-        <thead>
-          <tr>
-            <th
-              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-              Bond Index</th>
-            <th
-              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-              Bond Atoms</th>
-            <th
-              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-              Begin Atom</th>
-            <th
-              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-              End Atom</th>
-            <th
-              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-              BDE (kcal/mol)</th>
-            <th
-              style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-              Bond Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for( bond of bdeResults.bonds_predicted; track bond.idx){
-          <tr class="bde-row" style="transition:background 0.2s;">
-            <td>{{ bond.idx }}</td>
-            <td class="bond-atoms">{{ bond.bond_atoms }}</td>
-            <td>{{ bond.begin_atom_idx }}</td>
-            <td>{{ bond.end_atom_idx }}</td>
-            <td class="bde-value"
-              style="background:#e3f2fd; color:#003876; font-weight:700; border-radius:6px; box-shadow:0 2px 8px rgba(78,125,194,0.08);">
-              {{ bond.bde !== null ? (bond.bde | number:'1.2-2') : 'N/A' }}
-            </td>
-            <td class="bond-type">{{ bond.bond_type || 'Unknown' }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Export Buttons -->
-    <!-- SVG molecular structure from BDE results -->
-    @if(bdeResults.image_svg) {
-    <div class="results-section">
-      <h2 class="molecular-title">Molecular Structure (BDE Result)</h2>
-      <div class="image-actions">
-        <button (click)="downloadSVGFile(true)" class="btn-download">
-          🖼️ Download SVG
-        </button>
-        <button (click)="downloadPNGFile(true)" class="btn-download" style="margin-left: 0.5rem;">
-          📷 Download PNG
-        </button>
-      </div>
-      <div class="image-container">
-        <div class="image-controls">
-          <button (click)="zoomInBde()" class="control-btn" title="Zoom In">
-            🔍+
-          </button>
-          <button (click)="zoomOutBde()" class="control-btn" title="Zoom Out">
-            🔍-
-          </button>
-          <button (click)="resetZoomBde()" class="control-btn" title="Original Size">
-            ↻
-          </button>
-          <button (click)="toggleFullscreenBde()" class="control-btn" title="Fullscreen">
-            ⛶
-          </button>
-        </div>
-        <div class="draw-warning help-text">
-          <small>
-            <span
-              style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#222; margin-right:6px; vertical-align:middle;"></span>
-            Atoms
-            <span
-              style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#1976d2; margin:0 6px; vertical-align:middle;"></span>
-            BDE value
-          </small>
-        </div>
-        <div class="svg-display" [class.fullscreen]="isFullscreenBde" #svgContainerBde (mousedown)="startPanBde($event)"
-          (mousemove)="onPanBde($event)" (mouseup)="endPanBde()" (mouseleave)="endPanBde()"
-          (wheel)="onWheelBde($event)">
-          <!-- Close fullscreen button -->
-          @if(isFullscreenBde) {
-          <button (click)="toggleFullscreenBde()" class="close-fullscreen-btn" title="Close fullscreen">
-            ✕
-          </button>
-          }
-
-          <div class="svg-content" [innerHTML]="bdeResultsSanitizedSvg" [style.transform]="getTransformBde()">
-          </div>
-        </div>
-      </div>
+</div>
+}
+@if(error) {
+<div class="error-section">
+  <h3>⚠️ Error</h3>
+  <div class="error-message">
+    <p>{{ error }}</p>
+    @if(error.includes('multiple fragments') || error.includes('dots')) {
+    <div class="error-help">
+      <strong>Tip:</strong> Make sure to draw a single connected molecule.
+      If you see disconnected parts, use bonds to connect them or remove the extra fragments.
     </div>
     }
-    <div class="export-actions">
-      <h3>Export Data</h3>
-      <div class="export-buttons">
-        @if(bdeResults.smiles_list && bdeResults.smiles_list.length > 0){
-        <button (click)="downloadSmilesData()" class="btn-export">
-          📄 Download BDE fragment SMILES
-        </button>
-        }
-        @if(bdeResults.xyz_block){
-        <button (click)="downloadXyzData()" class="btn-export">
-          🧪 Download BDE fragment XYZ
-        </button>
-        }
-        <button (click)="downloadBdeTableCSV()" class="btn-export">
-          📊 Download this Table (CSV)
-        </button>
-      </div>
-    </div>
   </div>
-  }
-  @if(error) {
-  <div class="error-section">
-    <h3>⚠️ Error</h3>
-    <div class="error-message">
-      <p>{{ error }}</p>
-      @if(error.includes('multiple fragments') || error.includes('dots')) {
-      <div class="error-help">
-        <strong>Tip:</strong> Make sure to draw a single connected molecule.
-        If you see disconnected parts, use bonds to connect them or remove the extra fragments.
-      </div>
-      }
-    </div>
-  </div>
-  }
-  <footer class="footer-section">
-    <p>
-      &copy; 2023 DeepBDE. All rights reserved. designed by ????
-    </p>
-  </footer>
+</div>
+}
+<footer class="footer-section">
+  <p>
+    &copy; 2023 DeepBDE. All rights reserved. designed by ????
+  </p>
+</footer>
 </div>

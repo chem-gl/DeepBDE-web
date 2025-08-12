@@ -4,14 +4,40 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { RDKitModule } from '@rdkit/rdkit';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
+import { firstValueFrom } from 'rxjs';
 import {
   BDEEvaluateRequest,
   FragmentResponseData,
   MoleculeInfoRequest,
   MoleculeInfoResponseData,
+  MoleculeSmileCanonicalRequest,
   V1Service,
 } from '../../../../angular-client';
 
+// Extender la interfaz ExtendedFragmentResponseData para incluir propiedades de zoom y pan
+interface ExtendedFragmentResponseData extends FragmentResponseData {
+  isFullscreen?: boolean;
+  zoom?: number;
+  panX?: number;
+  panY?: number;
+  smiles?: string;
+  isPanning: boolean;
+  lastPanX: number;
+  lastPanY: number;
+}
+
+class Molecule {
+  public smiles: string;
+  public idSmile: string;
+  public canonical: string;
+  constructor(smiles: string, idSmile: string, canonical: string) {
+    this.smiles = smiles;
+    this.idSmile = idSmile;
+    this.canonical = canonical;
+  }
+}
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -20,7 +46,13 @@ import {
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
-  // Controles independientes para imagen principal
+  getSanitizedSvg(arg0: string) {
+    return this.sanitizer.bypassSecurityTrustHtml(arg0);
+  }
+  // Modal preview state
+  public previewModalOpen = false;
+  public previewSvg: SafeHtml | null = null;
+
   private zoomMain = 1.7;
   private panXMain = 0;
   private panYMain = 0;
@@ -41,7 +73,11 @@ export class HomeComponent {
   // SVG sanitizado para bdeResults.image_svg
   public bdeResultsSanitizedSvg: SafeHtml | null = null;
   // Component properties for mode selection
-  public selectedMode: 'smiles' | 'fragments' = 'smiles';
+  public selectedMode: 'smiles' | 'fragments' | 'smilesList' = 'smiles';
+  // Para lista de SMILES
+  public smilesList: Array<{ smiles: string; valid: boolean | null }> = [];
+  public smilesListInput: string = '';
+
   public smilesInput = '';
 
   // Properties for molecular analysis
@@ -63,15 +99,143 @@ export class HomeComponent {
   public moleculeInfo?: MoleculeInfoResponseData;
   // Properties for BDE results
   public bdeResults?: FragmentResponseData;
+  public allBDEResults: ExtendedFragmentResponseData[] = [];
+  private moleculeList: Molecule[] = [];
   public loadingBDE = false;
-
-  @ViewChild('ketcherFrame') ketcherFrame!: ElementRef<HTMLIFrameElement>;
 
   public smiles = '';
   public ketcherLoaded = false;
 
   private RDKit?: RDKitModule;
   public rdkitReady = false;
+  @ViewChild('ketcherFrame') ketcherFrame!: ElementRef<HTMLIFrameElement>;
+
+  // Agregar SMILES uno a uno
+  public addSmilesToList() {
+    const value = this.smilesListInput.trim();
+    if (!value) return;
+    if (this.smilesList.some((item) => item.smiles === value)) return;
+    // Validar SMILES
+    this.smilesList.push({ smiles: value, valid: null });
+    this.smilesListInput = '';
+    this.validateSmilesListItem(this.smilesList.length - 1);
+  }
+
+  // Eliminar SMILES de la lista
+  public removeSmilesFromList(item: { smiles: string; valid: boolean | null }) {
+    this.smilesList = this.smilesList.filter((s) => s !== item);
+  }
+
+  // Subir archivo de SMILES
+  public onSmilesFileUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      const lines = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l);
+      for (const line of lines) {
+        if (!this.smilesList.some((item) => item.smiles === line)) {
+          this.smilesList.push({ smiles: line, valid: null });
+        }
+      }
+      // Validar todos los nuevos
+      this.smilesList.forEach((_, idx) => this.validateSmilesListItem(idx));
+    };
+    reader.readAsText(file);
+  }
+
+  // Validar SMILES en la lista usando RDKit
+  private async validateSmilesListItem(idx: number) {
+    const item = this.smilesList[idx];
+    if (!item) return;
+    // Validación similar a isValidSingleMolecule
+    if (!item.smiles || item.smiles.includes('.')) {
+      this.smilesList[idx].valid = false;
+      return;
+    }
+    if (this.RDKit) {
+      try {
+        const mol = this.RDKit.get_mol(item.smiles);
+        this.smilesList[idx].valid = !!mol;
+      } catch {
+        this.smilesList[idx].valid = false;
+      }
+    } else {
+      // Si RDKit no está listo, marcar como pendiente
+      this.smilesList[idx].valid = null;
+    }
+  }
+
+  // Analizar todos los SMILES válidos
+  public async analyzeSmilesList() {
+    const validSmiles = this.smilesList
+      .filter((s) => s.valid)
+      .map((s) => s.smiles);
+
+    if (validSmiles.length === 0) return;
+
+    this.loadingBDE = true; // Activar indicador de carga
+
+    for (let idx = 0; idx < validSmiles.length; idx++) {
+      const peticion: MoleculeSmileCanonicalRequest = {
+        smiles: validSmiles[idx],
+      };
+
+      try {
+        const response: any = await firstValueFrom(
+          this.v1Service.v1PredictInfoSmileCanonicalCreate(peticion)
+        );
+        if (response?.data) {
+          this.moleculeList.push(
+            new Molecule(
+              response.data.smiles,
+              response.data.molecule_id,
+              response.data.smiles_canonical
+            )
+          );
+          const bdeRequest: BDEEvaluateRequest = {
+            smiles: response.data.smiles,
+            molecule_id: response.data.molecule_id,
+            export_smiles: true,
+            export_xyz: true,
+            bonds_idx: [],
+          };
+
+          const bdeResponse = await firstValueFrom(
+            this.v1Service.v1BDEEvaluateCreate(bdeRequest)
+          );
+          if (!bdeResponse.data) continue;
+          {
+            // Asegurar que cada resultado tenga la propiedad isFullscreen inicializada
+            if (bdeResponse.data) {
+              const resultWithFullscreen = {
+                ...bdeResponse.data,
+                isFullscreen: false,
+                zoom: 1,
+                panX: 0,
+                panY: 0,
+                isPanning: false,
+                lastPanX: 0,
+                lastPanY: 0,
+                smiles: response.data.smiles,
+              };
+              this.allBDEResults.push(resultWithFullscreen);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error procesando SMILES:', error);
+      }
+    }
+
+    this.loadingBDE = false; // Desactivar indicador de carga
+  }
+
   constructor(
     private readonly v1Service: V1Service,
     private readonly sanitizer: DomSanitizer
@@ -89,7 +253,6 @@ export class HomeComponent {
       }
     });
   }
-
   private async initRdkit() {
     try {
       // Si cargaste RDKit con <script> en index.html (CDN) o con assets.
@@ -122,8 +285,75 @@ export class HomeComponent {
       } catch {}
     }
     this.initRdkit();
+
+    this.allBDEResults.forEach((result) => {
+      result.zoom = 1;
+      result.panX = 0;
+      result.panY = 0;
+    });
   }
 
+  // Abrir modal y generar SVG con RDKit
+  public async openSmilesPreview(item: {
+    smiles: string;
+    valid: boolean | null;
+  }) {
+    if (!this.RDKit || !item.valid) return;
+    try {
+      const mol = this.RDKit.get_mol(item.smiles);
+      if (mol && mol.is_valid()) {
+        let svg = mol.get_svg(350, 200).trim();
+        // Sanitize SVG output
+        svg = svg.replace(/encoding='iso-8859-1'/g, "encoding='UTF-8'");
+        svg = svg.replace(/xmlns=/g, ' xmlns=');
+        svg = svg.replace(/xmlns:rdkit=/g, ' xmlns:rdkit=');
+        svg = svg.replace(/xmlns:xlink=/g, ' xmlns:xlink=');
+        svg = svg.replace(/xml:space=/g, ' xml:space=');
+        svg = svg.replace(/width="[^"]*"/, 'width="100%"');
+        svg = svg.replace(/height="[^"]*"/, 'height="auto"');
+        if (!/width="[^"]*"/.test(svg)) {
+          svg = svg.replace('<svg', '<svg width="100%"');
+        }
+        if (!/height="[^"]*"/.test(svg)) {
+          svg = svg.replace('<svg', '<svg height="auto"');
+        }
+        svg = svg.replace(/viewBox=/g, ' viewBox=');
+        svg = svg.replace(/\s+/g, ' ');
+        svg = svg.replace(
+          /^<\?xml[^>]+\?><svg/,
+          "<?xml version='1.0' encoding='UTF-8'?>\n<svg"
+        );
+        this.previewSvg = this.sanitizer.bypassSecurityTrustHtml(svg);
+        this.previewModalOpen = true;
+      } else {
+        this.previewSvg = '<div style="color:red;">Invalid molecule</div>';
+        this.previewModalOpen = true;
+      }
+    } catch {
+      this.previewSvg =
+        '<div style="color:red;">Error generating preview</div>';
+      this.previewModalOpen = true;
+    }
+  }
+
+  public closePreviewModal() {
+    this.previewModalOpen = false;
+    this.previewSvg = null;
+  }
+  public trackSmiles(
+    index: number,
+    item: { smiles: string; valid: boolean | null }
+  ) {
+    return item.smiles;
+  }
+
+  public getValidSmilesCount(): number {
+    return this.smilesList.filter((s) => s.valid === true).length;
+  }
+
+  public hasValidSmiles(): boolean {
+    return this.smilesList.some((s) => s.valid === true);
+  }
   // Métodos para imagen principal
   public zoomInMain() {
     this.zoomMain = Math.min(this.zoomMain * 1.2, 15);
@@ -476,18 +706,19 @@ export class HomeComponent {
       }, 100);
     }
   } // Method to change analysis mode
-  setMode(mode: 'smiles' | 'fragments') {
+  setMode(mode: 'smiles' | 'fragments' | 'smilesList') {
     this.selectedMode = mode;
-    // Clear inputs when switching modes
+    // Limpiar inputs y estados al cambiar de modo
     this.smilesInput = '';
-    this.smiles = ''; // Limpiar SMILES al cambiar de modo
-    this.ketcherLoaded = false; // Reset Ketcher loaded state
-
+    this.smiles = '';
+    this.ketcherLoaded = false;
     this.clearResults();
-
-    // Si se cambia al modo fragments, inicializar Ketcher
     if (mode === 'fragments') {
       this.initKetcherWhenModeChanges();
+    }
+    if (mode === 'smilesList') {
+      // Opcional: limpiar input temporal
+      this.smilesListInput = '';
     }
   }
 
@@ -656,7 +887,9 @@ export class HomeComponent {
     const value = this.smilesInput.trim();
     if (value && !this.smilesHistory.includes(value)) {
       this.smilesHistory.unshift(value);
-      if (this.smilesHistory.length > 10) this.smilesHistory.pop();
+      if (this.smilesHistory.length > 10) {
+        this.smilesHistory.pop();
+      }
       this.saveSmilesHistory();
     }
 
@@ -947,5 +1180,128 @@ export class HomeComponent {
       this.error = 'Error downloading BDE table';
       console.error('Error downloading CSV:', error);
     }
+  }
+
+  public async processSmilesList() {}
+
+  public async downloadReports(format: 'smiles' | 'xyz') {
+    const zip = new JSZip();
+
+    for (const result of this.allBDEResults) {
+      const moleculeName = result.smiles || 'unknown';
+      const fileName = `${moleculeName.replace(
+        /[^a-zA-Z0-9]/g,
+        '_'
+      )}.${format}`;
+      const content =
+        format === 'smiles'
+          ? result.smiles_list?.join('\n') || ''
+          : result.xyz_block || '';
+      zip.file(fileName, content);
+    }
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    saveAs(blob, `bde_reports_${format}.zip`);
+  }
+
+  toggleFullscreen(result: any) {
+    result.isFullscreen = !result.isFullscreen;
+  }
+
+  // Métodos exclusivos para zoom y fullscreen de cada elemento en allBDEResults
+  zoomIn(result: ExtendedFragmentResponseData) {
+    result.zoom = Math.min((result.zoom || 1) * 1.2, 15);
+  }
+
+  zoomOut(result: ExtendedFragmentResponseData) {
+    result.zoom = Math.max((result.zoom || 1) / 1.2, 0.1);
+  }
+
+  resetZoom(result: ExtendedFragmentResponseData) {
+    result.zoom = 1;
+    result.panX = 0;
+    result.panY = 0;
+  }
+
+  // Método para manejar el evento de scroll y ajustar el zoom
+  onWheel(result: ExtendedFragmentResponseData, event: WheelEvent) {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? 0.9 : 1.1;
+    result.zoom = Math.max(0.1, Math.min(15, (result.zoom || 1) * delta));
+  }
+
+  // Métodos para manejar el arrastre (panning)
+  startPan(result: ExtendedFragmentResponseData, event: MouseEvent) {
+    result.isPanning = true;
+    result.lastPanX = event.clientX;
+    result.lastPanY = event.clientY;
+  }
+
+  onPan(result: ExtendedFragmentResponseData, event: MouseEvent) {
+    if (!result.isPanning) return;
+    const deltaX = event.clientX - result.lastPanX;
+    const deltaY = event.clientY - result.lastPanY;
+    result.panX = (result.panX || 0) + deltaX;
+    result.panY = (result.panY || 0) + deltaY;
+    result.lastPanX = event.clientX;
+    result.lastPanY = event.clientY;
+  }
+  public endPan(result: ExtendedFragmentResponseData) {
+    result.isPanning = false;
+  }
+
+  // Método para descargar una imagen SVG
+  downloadImage(result: ExtendedFragmentResponseData) {
+    const svgBlob = new Blob([result.image_svg], {
+      type: 'image/svg+xml;charset=utf-8',
+    });
+    const url = URL.createObjectURL(svgBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${result.smiles || 'image'}.svg`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Método para obtener las transformaciones aplicadas al SVG
+  getTransform(result: ExtendedFragmentResponseData): string {
+    const scale = result.zoom || 1;
+    const translateX = result.panX || 0;
+    const translateY = result.panY || 0;
+    return `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+  }
+
+  // Propiedad para controlar el toggle de mostrar resultados
+  public showResults: boolean = false;
+
+  // Método para alternar el estado de mostrar resultados
+  toggleResults() {
+    this.showResults = !this.showResults;
+  }
+
+  // Método para descargar el formato SMILES de un resultado individual
+  downloadSmiles(result: ExtendedFragmentResponseData) {
+    const blob = new Blob([result.smiles_list?.join('\n') || ''], {
+      type: 'text/plain;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${result.smiles || 'result'}.smiles`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Método para descargar el formato XYZ de un resultado individual
+  downloadXyz(result: ExtendedFragmentResponseData) {
+    const blob = new Blob([result.xyz_block || ''], {
+      type: 'text/plain;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${result.smiles || 'result'}.xyz`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }
