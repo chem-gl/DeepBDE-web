@@ -114,7 +114,7 @@
           <input type="file" accept=".txt,.smiles,.smi,.smile" (change)="onSmilesFileUpload($event)"
             class="smiles-file-input" />
           <input type="text" [(ngModel)]="smilesListInput" placeholder="Add SMILES" class="smiles-input" />
-          <button class="btn-add" (click)="addSmilesToList()" [disabled]="!smilesListInput.trim()">Agregar</button>
+          <button class="btn-add" (click)="addSmilesToList()" [disabled]="!smilesListInput.trim()">add</button>
         </div>
       </div>
       @if(smilesList.length > 0) {
@@ -155,7 +155,6 @@
         </tbody>
       </table>
       }
-      <!-- Modal para mostrar imagen SVG generada por RDKit -->
       <div class="modal-preview" *ngIf="previewModalOpen" (click)="closePreviewModal()">
         <div class="modal-content" (click)="$event.stopPropagation()">
           <button class="modal-close" (click)="closePreviewModal()">✕</button>
@@ -165,7 +164,6 @@
       </div>
 
     </div>
-    <!-- Loading BDE Indicator -->
     @if(loadingBDE) {
     <div class="loading-indicator">
       <img src="/ball-triangle.svg" alt="Loading..." />
@@ -202,10 +200,9 @@
             <button *ngIf="result.zoomPan?.isFullscreen" (click)="toggleFullscreen(result)"
               class="close-fullscreen-btn">✕</button>
             <div class="svg-content">
-              <div [innerHTML]="getSanitizedSvg(result.image_svg)" class="svg-content"
-                [style.transform]="getTransform(result)" (mousedown)="startPan(result, $event)"
-                (mousemove)="onPan(result, $event)" (mouseup)="endPan(result)" (mouseleave)="endPan(result)"
-                (wheel)="onWheel(result, $event)">
+              <div [innerHTML]="result.sanitizedSvg" class="svg-content" [style.transform]="getTransform(result)"
+                (mousedown)="startPan(result, $event)" (mousemove)="onPan(result, $event)" (mouseup)="endPan(result)"
+                (mouseleave)="endPan(result)" (wheel)="onWheel(result, $event)">
               </div>
             </div>
           </div>
@@ -218,10 +215,10 @@
               ⬇ SVG Image
             </button>
             <button (click)="downloadSmiles(result)" class="control-btn" title="Download SMILES">
-              xyz format 📄
+              📄 Download SMILES
             </button>
             <button (click)="downloadXyz(result)" class="control-btn" title="Download XYZ">
-              smiles format 🧪
+              🧪 Download XYZ
             </button>
           </div>
         </div>
