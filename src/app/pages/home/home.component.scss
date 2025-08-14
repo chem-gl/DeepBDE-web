@@ -1,13 +1,16 @@
 @use "../../../styles/colors" as *;
 @use "../../../styles/mixins" as *;
+// --- SMILES List Section ---
 .smiles-list-section {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  margin-bottom: 2rem;
 }
-
 .smiles-list-actions {
   margin-bottom: 1.5rem;
+  width: 100%;
 }
 .smiles-list-row {
   display: flex;
@@ -16,16 +19,19 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: background 0.2s;
+  width: 100%;
+  gap: 0.5rem;
 }
 
+// --- Modal Preview ---
 .modal-preview {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75); /* Aumentar opacidad para oscurecer más */
-  z-index: 99999; /* Ensure modal is above all other elements */
+  background: rgba(0, 0, 0, 0.82);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,7 +40,7 @@
 .modal-content {
   background: #fff;
   border-radius: 16px;
-  padding: 2.5rem;
+  padding: 2.5rem 2rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
   position: relative;
   max-width: 90vw;
@@ -69,34 +75,41 @@
   max-width: 100%;
   overflow-x: auto;
 }
+// --- Botón Agregar y File Input ---
 .btn-add,
 .smiles-file-input {
   @include button-secondary;
   margin-left: 0.5rem;
   background: $border-blue;
   border-radius: 0;
+  min-width: 90px;
 }
 .btn-add:disabled {
   background: $border-blue;
   color: $text-gray;
   cursor: not-allowed;
 }
+// --- Loading Indicator ---
 .loading-indicator {
   height: 100px;
   width: 100px;
-  //centrar
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: auto;
+  margin: 2rem auto;
 }
+// --- SVG Content ---
 .svg-content {
   max-width: 100%;
   height: auto;
   width: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+// --- SMILES Table ---
 .smiles-table {
-  width: 75%;
+  width: 90%;
   border-collapse: collapse;
   margin-top: 1rem;
   background: white;
@@ -108,7 +121,6 @@
 .smiles-table td {
   text-align: center;
 }
-
 .smiles-table th {
   background: $primary-blue;
   color: $text-white;
@@ -118,9 +130,6 @@
 .smiles-table tr:last-child td {
   border-bottom: none;
 }
-/*
-  Pongo el fondo diferente para cada renglon de la tabla
-*/
 .smiles-table tr:nth-child(even) {
   background: $light-gray-2;
 }
@@ -132,34 +141,55 @@
   justify-content: center;
   display: flex;
 }
+// --- NoButton ---
 .noButton {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.5rem;
+  transition: background 0.15s;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  &:hover {
+    background: $light-gray-2;
+  }
 }
+// --- Download Section ---
 .download-section {
   display: flex;
   justify-content: center;
   margin-top: 1rem;
   border-radius: 10px;
+  gap: 1rem;
   .noButton {
     background-color: $primary-blue;
+    color: $text-white;
     padding: 0.5rem 1.2rem;
     border-radius: 15px;
     cursor: pointer;
+    font-size: 1rem;
+    &:hover {
+      background: $button-gradient;
+    }
   }
 }
+// --- NoButton2 ---
 .noButton2 {
   background-color: $primary-blue;
+  color: $text-white;
   padding: 0.5rem 1.2rem;
   border-radius: 15px;
   width: 300px;
-  margin: auto;
-  margin-top: 20px;
+  margin: 20px auto 0 auto;
   cursor: pointer;
   text-align: center;
+  font-size: 1rem;
+  transition: background 0.15s;
+  &:hover {
+    background: $button-gradient;
+  }
 }
+// --- Image Container ---
 .image-container {
   display: flex;
   flex-direction: column;
@@ -169,6 +199,7 @@
   margin: 0 auto 2rem auto;
 }
 
+// --- SVG Display Fullscreen ---
 .svg-display.fullscreen {
   position: fixed;
   top: 0;
@@ -185,37 +216,32 @@
   box-shadow: none;
   overflow: auto;
 }
+// --- BDE Results Section Scroll ---
 .bde-results-section-scroll {
   margin-top: 2rem;
   padding: 1rem;
   border-radius: 8px;
-  max-height: 1500px;
+  max-height: 550px;
   overflow-y: auto;
-
-  /* Firefox */
-  scrollbar-width: thin; /* thin, auto o none */
-  scrollbar-color: #888 #f1f1f1; /* thumb color / track color */
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
 }
-
-/* WebKit (Chrome, Edge, Safari) */
 .bde-results-section-scroll::-webkit-scrollbar {
-  width: 12px; /* grosor vertical */
+  width: 12px;
 }
-
 .bde-results-section-scroll::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
-
 .bde-results-section-scroll::-webkit-scrollbar-thumb {
   background-color: #888;
-  width: 18px; /* ancho del scroll */
+  width: 18px;
 }
-
 .bde-results-section-scroll::-webkit-scrollbar-thumb:hover {
   background-color: #555;
   border-radius: 10px;
 }
 
+// --- Close Fullscreen Button ---
 .close-fullscreen-btn {
   position: absolute;
   top: 100px;
@@ -228,10 +254,19 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 1rem;
   cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: $light-gray-2;
+  }
 }
 
+// --- Molecular Title ---
 .molecular-title {
   text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $primary-blue;
+  margin-bottom: 1rem;
 }
 
 .home-container {
@@ -392,7 +427,7 @@
   border-radius: 10px;
   background: white;
   overflow: auto;
-  height: 500px;
+  height: 300px;
   width: 100%;
 }
 .svg-content {
@@ -588,5 +623,12 @@
   }
   .bde-results-section {
     margin-top: 1rem;
+  }
+  .smiles-table {
+    width: 100%;
+    font-size: 0.95rem;
+  }
+  .modal-content {
+    padding: 1.2rem 0.5rem;
   }
 }

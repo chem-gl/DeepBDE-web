@@ -198,10 +198,10 @@
         *ngFor="let result of allBDEResults" class="bde-results-section">
         <h3 class="molecular-title">Molecule: {{ result.smiles }}</h3>
         <div class="molecule-image">
-          <div [class.fullscreen]="result.isFullscreen" class="svg-display">
-            <button *ngIf="result.isFullscreen" (click)="toggleFullscreen(result)"
+          <div [class.fullscreen]="result.zoomPan?.isFullscreen" class="svg-display">
+            <button *ngIf="result.zoomPan?.isFullscreen" (click)="toggleFullscreen(result)"
               class="close-fullscreen-btn">✕</button>
-            <div class="svg-content" [style.transform]="'scale(' + (result.zoom || 1) + ')'">
+            <div class="svg-content">
               <div [innerHTML]="getSanitizedSvg(result.image_svg)" class="svg-content"
                 [style.transform]="getTransform(result)" (mousedown)="startPan(result, $event)"
                 (mousemove)="onPan(result, $event)" (mouseup)="endPan(result)" (mouseleave)="endPan(result)"
@@ -301,11 +301,11 @@
         Bonds
       </small>
     </div>
-    <div class="svg-display" [class.fullscreen]="isFullscreenMain" #svgContainerMain (mousedown)="startPanMain($event)"
-      (mousemove)="onPanMain($event)" (mouseup)="endPanMain()" (mouseleave)="endPanMain()"
-      (wheel)="onWheelMain($event)">
+    <div class="svg-display" [class.fullscreen]="zoomPanMain.isFullscreen" #svgContainerMain
+      (mousedown)="startPanMain($event)" (mousemove)="onPanMain($event)" (mouseup)="endPanMain()"
+      (mouseleave)="endPanMain()" (wheel)="onWheelMain($event)">
       <!-- Close fullscreen button -->
-      @if(isFullscreenMain) {
+      @if(zoomPanMain.isFullscreen) {
       <button (click)="toggleFullscreenMain()" class="close-fullscreen-btn" title="Close fullscreen">
         ✕
       </button>
@@ -458,10 +458,11 @@
           BDE value
         </small>
       </div>
-      <div class="svg-display" [class.fullscreen]="isFullscreenBde" #svgContainerBde (mousedown)="startPanBde($event)"
-        (mousemove)="onPanBde($event)" (mouseup)="endPanBde()" (mouseleave)="endPanBde()" (wheel)="onWheelBde($event)">
+      <div class="svg-display" [class.fullscreen]="zoomPanBde.isFullscreen" #svgContainerBde
+        (mousedown)="startPanBde($event)" (mousemove)="onPanBde($event)" (mouseup)="endPanBde()"
+        (mouseleave)="endPanBde()" (wheel)="onWheelBde($event)">
         <!-- Close fullscreen button -->
-        @if(isFullscreenBde) {
+        @if(zoomPanBde.isFullscreen) {
         <button (click)="toggleFullscreenBde()" class="close-fullscreen-btn" title="Close fullscreen">
           ✕
         </button>
