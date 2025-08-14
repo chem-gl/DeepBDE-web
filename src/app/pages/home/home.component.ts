@@ -12,7 +12,6 @@ import {
   FragmentResponseData,
   MoleculeInfoRequest,
   MoleculeInfoResponseData,
-  MoleculeSmileCanonicalRequest,
   V1Service,
 } from '../../../../angular-client';
 export class ZoomPanState {
@@ -132,6 +131,41 @@ class Molecule {
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
+  // In-memory caches for API results
+  private canonicalSmilesCache = new Map<string, any>();
+  private bdeResultsCache = new Map<string, any>();
+
+  private async getCanonicalSmiles(smiles: string): Promise<any> {
+    if (this.canonicalSmilesCache.has(smiles)) {
+      return this.canonicalSmilesCache.get(smiles);
+    }
+    const response = await firstValueFrom(
+      this.v1Service.v1PredictInfoSmileCanonicalCreate({ smiles })
+    );
+    this.canonicalSmilesCache.set(smiles, response);
+    return response;
+  }
+
+  private async getBdeResults(
+    smiles: string,
+    molecule_id: string
+  ): Promise<any> {
+    const key = `${smiles}|${molecule_id}`;
+    if (this.bdeResultsCache.has(key)) {
+      return this.bdeResultsCache.get(key);
+    }
+    const response = await firstValueFrom(
+      this.v1Service.v1BDEEvaluateCreate({
+        smiles,
+        molecule_id,
+        export_smiles: true,
+        export_xyz: true,
+        bonds_idx: [],
+      })
+    );
+    this.bdeResultsCache.set(key, response);
+    return response;
+  }
   public previewModalOpen = false;
   public previewSvg: SafeHtml | null = null;
   public zoomPanMain = createZoomPanState(1.7);
@@ -206,7 +240,7 @@ export class HomeComponent {
       .filter((s) => s.valid)
       .map((s) => s.smiles);
     if (validSmiles.length === 0) {
-      this.error = 'No hay SMILES válidos en la lista.';
+      this.error = 'No valid SMILES in the list.';
       return;
     }
     this.allBDEResults = [];
@@ -215,20 +249,17 @@ export class HomeComponent {
     let hadAnyError = false;
     try {
       for (const smiles of validSmiles) {
-        const peticion: MoleculeSmileCanonicalRequest = { smiles };
         let response: any;
         try {
-          response = await firstValueFrom(
-            this.v1Service.v1PredictInfoSmileCanonicalCreate(peticion)
-          );
+          response = await this.getCanonicalSmiles(smiles);
         } catch (err) {
           hadAnyError = true;
-          console.error('Error obteniendo SMILES canónico para', smiles, err);
-          continue; // Salta al siguiente SMILES
+          console.error('Error getting canonical SMILES for', smiles, err);
+          continue;
         }
         if (!response?.data) {
           hadAnyError = true;
-          console.warn('Respuesta vacía para SMILES:', smiles);
+          console.warn('Empty response for SMILES:', smiles);
           continue;
         }
 
@@ -240,27 +271,20 @@ export class HomeComponent {
           )
         );
 
-        const bdeRequest: BDEEvaluateRequest = {
-          smiles: response.data.smiles,
-          molecule_id: response.data.molecule_id,
-          export_smiles: true,
-          export_xyz: true,
-          bonds_idx: [],
-        };
-
         let bdeResponse: any;
         try {
-          bdeResponse = await firstValueFrom(
-            this.v1Service.v1BDEEvaluateCreate(bdeRequest)
+          bdeResponse = await this.getBdeResults(
+            response.data.smiles,
+            response.data.molecule_id
           );
         } catch (err) {
           hadAnyError = true;
-          console.error('Error obteniendo datos BDE para', smiles, err);
+          console.error('Error getting BDE data for', smiles, err);
           continue;
         }
         if (!bdeResponse?.data) {
           hadAnyError = true;
-          console.warn('Respuesta BDE vacía para SMILES:', smiles);
+          console.warn('Empty BDE response for SMILES:', smiles);
           continue;
         }
 
@@ -273,14 +297,14 @@ export class HomeComponent {
       }
       if (hadAnyError) {
         this.error =
-          'Algunos SMILES no pudieron ser procesados. Revisa la consola para más detalles.';
+          'Some SMILES could not be processed. Check the console for details.';
       } else {
         this.error = null;
       }
     } catch (err) {
-      console.error('Error inesperado en analyzeSmilesList:', err);
+      console.error('Unexpected error in analyzeSmilesList:', err);
       this.error =
-        'Ocurrió un error inesperado al analizar la lista de SMILES.';
+        'An unexpected error occurred while analyzing the SMILES list.';
     } finally {
       this.loadingBDE = false;
     }
@@ -953,7 +977,7 @@ export class HomeComponent {
             : result.xyz_block || '';
         if (!content) {
           hadAnyError = true;
-          console.warn(`No hay datos para ${fileName}`);
+          console.warn(`No data for ${fileName}`);
           continue;
         }
         zip.file(fileName, content);
@@ -961,16 +985,14 @@ export class HomeComponent {
       blob = await zip.generateAsync({ type: 'blob' });
       saveAs(blob, `bde_reports_${format}.zip`);
       if (hadAnyError) {
-        this.error =
-          'Algunos archivos no tenían datos y no se incluyeron en el ZIP.';
+        this.error = 'Some files had no data and were not included in the ZIP.';
       } else {
         this.error = null;
       }
     } catch (err) {
-      this.error = 'Error al generar o descargar el ZIP de reportes.';
-      console.error('Error en downloadReports:', err);
+      this.error = 'Error generating or downloading the reports ZIP.';
+      console.error('Error in downloadReports:', err);
     } finally {
-      // No cleanup necesario para blob, pero se mantiene la estructura finally
     }
   }
   public toggleFullscreen(result: ExtendedFragmentResponseData): void {
