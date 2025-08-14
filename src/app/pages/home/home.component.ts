@@ -25,6 +25,7 @@ export class ZoomPanState {
   constructor(initZoom = 1) {
     this.zoom = initZoom;
   }
+
   public updateZoom(factor: number) {
     this.zoom = Math.max(0.1, Math.min(15, this.zoom * factor));
   }
@@ -91,21 +92,12 @@ function isValidSmiles(smiles: string, RDKit?: RDKitModule): boolean | null {
 function createZoomPanState(initZoom = 1): ZoomPanState {
   return new ZoomPanState(initZoom);
 }
-function setupKetcher(
-  ketcherFrame: ElementRef<HTMLIFrameElement>,
-  ketcherLoaded: boolean,
-  onLoaded: () => void
-): void {
-  if (ketcherFrame && ketcherFrame.nativeElement && !ketcherLoaded) {
+function setupKetcher(ketcherFrame: ElementRef<HTMLIFrameElement>): void {
+  if (ketcherFrame && ketcherFrame.nativeElement) {
     const iframe = ketcherFrame.nativeElement;
     if (!iframe.src.endsWith('ketcher/index.html')) {
       iframe.src = 'ketcher/index.html';
     }
-    iframe.onload = () => {
-      setTimeout(() => {
-        onLoaded();
-      }, 500);
-    };
   }
 }
 export interface ExtendedFragmentResponseData extends FragmentResponseData {
@@ -190,7 +182,6 @@ export class HomeComponent {
   private moleculeList: Molecule[] = [];
   public loadingBDE = false;
   public smiles = '';
-  public ketcherLoaded = false;
   private RDKit?: RDKitModule;
   public rdkitReady = false;
   @ViewChild('ketcherFrame')
@@ -468,9 +459,7 @@ export class HomeComponent {
     }
   }
   private setupKetcherIfAvailable(): void {
-    setupKetcher(this.ketcherFrame, this.ketcherLoaded, () => {
-      this.ketcherLoaded = true;
-    });
+    setupKetcher(this.ketcherFrame);
   }
   public async getSmiles(): Promise<void> {
     this.error = null;
@@ -479,11 +468,7 @@ export class HomeComponent {
         'Molecular editor is not available. Please switch to Draw Molecule mode.';
       return;
     }
-    if (!this.ketcherLoaded) {
-      this.error =
-        'Molecular editor is still loading. Please wait a moment and try again.';
-      return;
-    }
+
     const iframeWin = this.ketcherFrame.nativeElement.contentWindow;
     if (!iframeWin) {
       this.error = 'Cannot access molecular editor. Please refresh the page.';
@@ -569,7 +554,6 @@ export class HomeComponent {
   }
   public reloadKetcher(): void {
     if (this.ketcherFrame && this.ketcherFrame.nativeElement) {
-      this.ketcherLoaded = false;
       this.smiles = '';
       this.error = null;
       if (!this.ketcherFrame.nativeElement.src.endsWith('ketcher/index.html')) {
@@ -600,7 +584,6 @@ export class HomeComponent {
   private clearAllOutputs(): void {
     this.smilesInput = '';
     this.smiles = '';
-    this.ketcherLoaded = false;
     this.svgImage = null;
     this.sanitizedSvg = null;
     this.error = null;
