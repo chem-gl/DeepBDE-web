@@ -4,7 +4,6 @@
   max-width: 1200px;
   line-height: 1.8;
   padding: 2rem;
-  background-color: #f9f9f9;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   @include mobile-container;
@@ -14,7 +13,6 @@
   padding: 4rem 2rem;
   color: white;
   text-align: center;
-  border-radius: 10px;
   h1 {
     font-size: 3.5rem;
     font-weight: 800;
@@ -231,7 +229,7 @@
       width: 100px;
       height: 100px;
       object-fit: cover;
-      border-radius: 50%;
+      border-radius: 5%;
       margin-bottom: 1rem;
     }
     p {
