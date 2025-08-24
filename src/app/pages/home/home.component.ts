@@ -14,6 +14,7 @@ import {
   MoleculeInfoResponseData,
   V1Service,
 } from '../../../../angular-client';
+import { PredictedBond } from '../../../../angular-client/model/predictedBond';
 export class ZoomPanState {
   public zoom = 1.0;
   public panX = 0;
@@ -1059,5 +1060,102 @@ export class HomeComponent {
     link.download = `${result.smiles || 'result'}.txt`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+  // --- Filtering / duplicate removal for BDE tables ---
+  public hideNaBonds = true; // default checked
+  public removeDuplicatedAdjacent = true; // default checked
+  // --- Sorting state ---
+  public sortKey: 'idx' | 'bde' | 'bond_atoms' = 'idx';
+  public sortDir: 1 | -1 = 1; // 1 asc, -1 desc
+
+  public changeSort(key: 'idx' | 'bde' | 'bond_atoms'): void {
+    if (this.sortKey === key) {
+      this.sortDir = this.sortDir === 1 ? -1 : 1;
+    } else {
+      this.sortKey = key;
+      this.sortDir = 1;
+    }
+  }
+  public sortIndicator(key: 'idx' | 'bde' | 'bond_atoms'): string {
+    if (this.sortKey !== key) return '';
+    return this.sortDir === 1 ? '▲' : '▼';
+  }
+
+  private sortBonds(bonds: PredictedBond[]): PredictedBond[] {
+    const dir = this.sortDir;
+    const key = this.sortKey;
+    return [...bonds].sort((a, b) => {
+      let av: any;
+      let bv: any;
+      switch (key) {
+        case 'idx':
+          av = a.idx;
+          bv = b.idx;
+          break;
+        case 'bde':
+          av = a.bde === null ? Number.POSITIVE_INFINITY : a.bde;
+          bv = b.bde === null ? Number.POSITIVE_INFINITY : b.bde;
+          break;
+        case 'bond_atoms':
+          av = a.bond_atoms || '';
+          bv = b.bond_atoms || '';
+          break;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }
+
+  private getHeavyAtomIndex(bond: PredictedBond): number | null {
+    // Heuristic: if bond_atoms like X-H or H-X choose non-H atom index as heavy atom
+    const atoms = bond.bond_atoms.split('-');
+    if (atoms.length === 2) {
+      const [a1, a2] = atoms;
+      const a1IsH = a1.toUpperCase() === 'H';
+      const a2IsH = a2.toUpperCase() === 'H';
+      if (a1IsH && !a2IsH) return bond.end_atom_idx; // H-X => heavy is end
+      if (a2IsH && !a1IsH) return bond.begin_atom_idx; // X-H => heavy is begin
+    }
+    // Fallback: return the smaller index for deterministic grouping
+    return Math.min(bond.begin_atom_idx, bond.end_atom_idx);
+  }
+
+  private removeDuplicateEquivalentBonds(
+    bonds: PredictedBond[]
+  ): PredictedBond[] {
+    if (!this.removeDuplicatedAdjacent) return bonds;
+    const seen = new Set<string>();
+    const result: PredictedBond[] = [];
+    for (const bond of bonds) {
+      const heavy = this.getHeavyAtomIndex(bond);
+      const bdeKey = bond.bde !== null ? bond.bde.toFixed(2) : 'NA';
+      const key = `${heavy}|${bond.bond_atoms}|${bdeKey}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(bond);
+      }
+    }
+    return result;
+  }
+
+  public filteredBonds(): PredictedBond[] {
+    if (!this.bdeResults?.bonds_predicted) return [];
+    let bonds = this.bdeResults.bonds_predicted;
+    if (this.hideNaBonds) bonds = bonds.filter((b) => b.bde !== null);
+    bonds = this.removeDuplicateEquivalentBonds(bonds);
+    bonds = this.sortBonds(bonds);
+    return bonds;
+  }
+
+  public getFilteredBonds(
+    result: ExtendedFragmentResponseData
+  ): PredictedBond[] {
+    if (!result?.bonds_predicted) return [];
+    let bonds = result.bonds_predicted;
+    if (this.hideNaBonds) bonds = bonds.filter((b) => b.bde !== null);
+    bonds = this.removeDuplicateEquivalentBonds(bonds);
+    bonds = this.sortBonds(bonds);
+    return bonds;
   }
 }

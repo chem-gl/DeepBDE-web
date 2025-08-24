@@ -210,19 +210,30 @@
           </div>
         </div>
         <div class="bde-table-container">
+          <div class="batch-filter-controls" style="display:flex; gap:1rem; flex-wrap:wrap; margin:0 0 0.6rem 0;">
+            <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+              <input type="checkbox" [(ngModel)]="removeDuplicatedAdjacent" />
+              <span>Remove duplicated adjacent bonds</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+              <input type="checkbox" [(ngModel)]="hideNaBonds" />
+              <span>Hide N/A values</span>
+            </label>
+          </div>
           <table class="bde-table">
             <thead>
               <tr>
-                <th>Bond Index</th>
-                <th>Bond Atoms</th>
+                <th (click)="changeSort('idx')" style="cursor:pointer;">Bond Index {{ sortIndicator('idx') }}</th>
+                <th (click)="changeSort('bond_atoms')" style="cursor:pointer;">Bond Atoms {{ sortIndicator('bond_atoms')
+                  }}</th>
                 <th>Begin Atom</th>
                 <th>End Atom</th>
-                <th>BDE (kcal/mol)</th>
+                <th (click)="changeSort('bde')" style="cursor:pointer;">BDE (kcal/mol) {{ sortIndicator('bde') }}</th>
                 <th>Bond Type</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let bond of result.bonds_predicted">
+              <tr *ngFor="let bond of getFilteredBonds(result)">
                 <td>{{ bond.idx }}</td>
                 <td>{{ bond.bond_atoms }}</td>
                 <td>{{ bond.begin_atom_idx }}</td>
@@ -355,37 +366,50 @@
 </div>
 }
 <!-- BDE Results Section -->
+
 @if(bdeResults) {
+<!-- Nuevos features seran checkbox que habilitaran si se deben quitar valores repetidos si acaso estan pegados estos al mismo atomo
+ y otro checkbox para  ocultar los  N/A -->
 <div class="bde-results-section">
   <h2>Bond Dissociation Energy Results</h2>
+  <div style="display:flex; gap:1.5rem; margin:0.5rem 0 1rem 0; flex-wrap:wrap;">
+    <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+      <input type="checkbox" [(ngModel)]="removeDuplicatedAdjacent" />
+      <span>Remove duplicated adjacent bonds (same heavy atom & value)</span>
+    </label>
+    <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+      <input type="checkbox" [(ngModel)]="hideNaBonds" />
+      <span>Hide N/A values</span>
+    </label>
+  </div>
   <!-- BDE Table -->
   <div class="bde-table-container">
     <table class="bde-table"
       style="width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,33,69,0.1);">
       <thead>
         <tr>
-          <th
-            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-            Bond Index</th>
-          <th
-            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-            Bond Atoms</th>
+          <th (click)="changeSort('idx')"
+            style="cursor:pointer; background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            Bond Index {{ sortIndicator('idx') }}</th>
+          <th (click)="changeSort('bond_atoms')"
+            style="cursor:pointer; background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            Bond Atoms {{ sortIndicator('bond_atoms') }}</th>
           <th
             style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
             Begin Atom</th>
           <th
             style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
             End Atom</th>
-          <th
-            style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
-            BDE (kcal/mol)</th>
+          <th (click)="changeSort('bde')"
+            style="cursor:pointer; background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
+            BDE (kcal/mol) {{ sortIndicator('bde') }}</th>
           <th
             style="background:linear-gradient(135deg, #efeeed 0%, #d3d1cb 100%); color:#002145; font-weight:600; font-size:0.95rem; text-transform:none; letter-spacing:0.5px;">
             Bond Type</th>
         </tr>
       </thead>
       <tbody>
-        @for( bond of bdeResults.bonds_predicted; track bond.idx){
+        @for( bond of filteredBonds(); track bond.idx){
         <tr class="bde-row" style="transition:background 0.2s;">
           <td>{{ bond.idx }}</td>
           <td class="bond-atoms">{{ bond.bond_atoms }}</td>
