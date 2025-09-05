@@ -1077,7 +1077,7 @@ export class HomeComponent {
     }
   }
   public sortIndicator(key: 'idx' | 'bde' | 'bond_atoms'): string {
-    if (this.sortKey !== key) return '';
+    if (this.sortKey !== key) return '□';
     return this.sortDir === 1 ? '▲' : '▼';
   }
 

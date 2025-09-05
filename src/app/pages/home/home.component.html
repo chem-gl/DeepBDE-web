@@ -202,7 +202,7 @@
               ⬇ SVG Image
             </button>
             <button (click)="downloadSmiles(result)" class="control-btn" title="Download SMILES">
-              📄 Download SMILES
+              📄 Download SMILES??
             </button>
             <button (click)="downloadXyz(result)" class="control-btn" title="Download XYZ">
               🧪 Download XYZ
@@ -224,8 +224,7 @@
             <thead>
               <tr>
                 <th (click)="changeSort('idx')" style="cursor:pointer;">Bond Index {{ sortIndicator('idx') }}</th>
-                <th (click)="changeSort('bond_atoms')" style="cursor:pointer;">Bond Atoms {{ sortIndicator('bond_atoms')
-                  }}</th>
+                <th (click)="changeSort('bond_atoms')" style="cursor:pointer;">Bond Atoms {{ sortIndicator('bond_atoms') }}</th>
                 <th>Begin Atom</th>
                 <th>End Atom</th>
                 <th (click)="changeSort('bde')" style="cursor:pointer;">BDE (kcal/mol) {{ sortIndicator('bde') }}</th>
